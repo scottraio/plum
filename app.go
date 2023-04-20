@@ -12,23 +12,25 @@ var App *AppConfig
 
 // AppConfig represents the app config.
 type AppConfig struct {
-	PineconeKey string
-	PineconeEnv string
-	Pinecone    Pinecone
-	OpenAIToken string
-	OpenAI      OpenAI
-	Port        string
-	Verbose     bool
+	PineconeKey       string
+	PineconeEnv       string
+	PineconeProjectId string
+	Pinecone          Pinecone
+	OpenAIToken       string
+	OpenAI            OpenAI
+	Port              string
+	Verbose           bool
 }
 
 // Init initializes the app config.
 func Init() AppConfig {
 	App = &AppConfig{
-		PineconeKey: getDotEnvVariable("PINECONE_API_KEY"),
-		PineconeEnv: getDotEnvVariable("PINECONE_ENV"),
-		OpenAIToken: getDotEnvVariable("OPENAI_API_KEY"),
-		Port:        getDotEnvVariable("PORT"),
-		Verbose:     getDotEnvVariable("VERBOSE") == "true",
+		PineconeKey:       getDotEnvVariable("PINECONE_API_KEY"),
+		PineconeEnv:       getDotEnvVariable("PINECONE_ENV"),
+		PineconeProjectId: getDotEnvVariable("PINECONE_PROJECT_ID"),
+		OpenAIToken:       getDotEnvVariable("OPENAI_API_KEY"),
+		Port:              getDotEnvVariable("PORT"),
+		Verbose:           getDotEnvVariable("VERBOSE") == "true",
 	}
 
 	App.OpenAI = *NewOpenAI(App.OpenAIToken)
