@@ -41,7 +41,7 @@ func (p *Pinecone) Query(version string, input string) string {
 
 	// make the request
 	url := fmt.Sprintf("https://%s-%s.svc.%s.pinecone.io/query", p.IndexName, p.ProjectName, p.PineconeEnv)
-	body := p.makeHTTPRequest(url, version, input)
+	body := p.makeHTTPRequest(url, input)
 
 	// parse the response
 	var resp PineconeResponse
@@ -55,13 +55,13 @@ func (p *Pinecone) Query(version string, input string) string {
 }
 
 // Upsert upserts a document into the Pinecone index.
-func (p *Pinecone) Upsert(version string, input string) string {
+func (p *Pinecone) Upsert(input string) string {
 	// copy credentials
 	p.copyCredentials()
 
 	// make the request
 	url := fmt.Sprintf("https://%s-%s.svc.%s.pinecone.io/vectors/upsert", p.IndexName, p.ProjectName, p.PineconeEnv)
-	body := p.makeHTTPRequest(url, version, input)
+	body := p.makeHTTPRequest(url, input)
 
 	// parse the response
 	var resp PineconeResponse
@@ -75,7 +75,7 @@ func (p *Pinecone) Upsert(version string, input string) string {
 }
 
 // makeHTTPRequest makes the HTTP request to the Pinecone API.
-func (p *Pinecone) makeHTTPRequest(url string, version string, input string) []byte {
+func (p *Pinecone) makeHTTPRequest(url string, input string) []byte {
 	// get the embeddings
 	embeddings := EmbedText(input)
 
@@ -85,7 +85,7 @@ func (p *Pinecone) makeHTTPRequest(url string, version string, input string) []b
 		IncludeMetadata: true,
 		Vector:          embeddings,
 		TopK:            1000,
-		Namespace:       version,
+		Namespace:       p.Namespace,
 	}
 
 	// convert the payload to JSON
