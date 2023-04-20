@@ -1,4 +1,4 @@
-package framework
+package plum
 
 type LLM struct {
 }

@@ -1,4 +1,4 @@
-package framework
+package plum
 
 type Tool struct {
 	Name        string
