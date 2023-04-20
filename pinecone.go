@@ -13,7 +13,7 @@ type Pinecone struct {
 	IndexName   string
 	ProjectName string
 	PineconeEnv string
-	Version     string
+	Namespace   string
 }
 
 type PineconeResponse struct {
