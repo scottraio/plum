@@ -7,10 +7,9 @@ import (
 )
 
 type Initialize struct {
-	Embedding        string
-	LLM              string
-	VectorStore      string
-	VectorStoreIndex string
+	Embedding         string
+	LLM               string
+	VectorStoreConfig VectorStoreConfig
 }
 
 func InitLLM(init Initialize) llms.LLM {
@@ -47,21 +46,21 @@ func InitEmbeddings(init Initialize) embeddings.Embedding {
 	return e
 }
 
-func InitVectorStore(init Initialize) store.VectorStore {
-	var v store.VectorStore
+func InitVectorStore(init Initialize) map[string]store.VectorStore {
+	var v map[string]store.VectorStore
 
-	switch init.VectorStore {
+	switch init.VectorStoreConfig.Db {
 	case "pinecone":
 		apiKey := GetDotEnvVariable("PINECONE_API_KEY")
 		env := GetDotEnvVariable("PINECONE_ENV")
 		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
-		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreIndex)
+		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes)
 		break
 	default:
 		apiKey := GetDotEnvVariable("PINECONE_API_KEY")
 		env := GetDotEnvVariable("PINECONE_ENV")
 		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
-		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreIndex)
+		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes)
 		break
 	}
 

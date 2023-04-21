@@ -30,21 +30,25 @@ type Pinecone struct {
 }
 
 // InitPinecone initializes a Pinecone client.
-func InitPinecone(apiKey string, env string, productId string, index string) VectorStore {
-	config := &PineconeConfig{
-		PineconeKey:       apiKey,
-		PineconeEnv:       env,
-		PineconeProjectId: productId,
+func InitPinecone(apiKey string, env string, productId string, indexes []string) map[string]VectorStore {
+	indexMap := make(map[string]VectorStore)
+
+	for _, index := range indexes {
+		config := &PineconeConfig{
+			PineconeKey:       apiKey,
+			PineconeEnv:       env,
+			PineconeProjectId: productId,
+		}
+
+		pinecone := Pinecone{
+			Config:    *config,
+			IndexName: index,
+		}
+
+		indexMap[index] = pinecone.NewClient()
 	}
 
-	pinecone := Pinecone{
-		Config:    *config,
-		IndexName: index,
-	}
-
-	pinecone.NewClient()
-
-	return &pinecone
+	return indexMap
 }
 
 // Client returns a Pinecone client.
@@ -79,7 +83,8 @@ func (p *Pinecone) NewClient() VectorStore {
 
 // Query queries the Pinecone index.
 func (p *Pinecone) Query(embeddings []float32) string {
-	// client
+	// client'
+
 	queryResult, queryErr := p._Client.Query(p._Context, &pinecone_grpc.QueryRequest{
 		Queries: []*pinecone_grpc.QueryVector{
 			{Values: embeddings},
@@ -100,27 +105,20 @@ func (p *Pinecone) Query(embeddings []float32) string {
 }
 
 // Upsert upserts a document into the Pinecone index.
-func (p *Pinecone) Upsert(namespace string, embeddings []float32) string {
-	log.Print("upserting data...")
+func (p *Pinecone) Upsert(namespace string, vectors [][]float32) error {
+	var vects []*pinecone_grpc.Vector
 
-	upsertResult, upsertErr := p._Client.Upsert(p._Context, &pinecone_grpc.UpsertRequest{
-		Vectors: []*pinecone_grpc.Vector{
-			{
-				Id:     uuid.New().String(),
-				Values: embeddings,
-			},
-		},
+	for _, vector := range vectors {
+		vects = append(vects, &pinecone_grpc.Vector{Id: uuid.New().String(), Values: vector})
+	}
+
+	_, upsertErr := p._Client.Upsert(p._Context, &pinecone_grpc.UpsertRequest{
+		Vectors:   vects,
 		Namespace: namespace,
 	})
 
-	if upsertErr != nil {
-		log.Fatalf("upsert error: %v", upsertErr)
-	} else {
-		log.Printf("upsert result: %v", upsertResult)
-	}
-
 	// return the first result
-	return "success"
+	return upsertErr
 }
 
 func (p *Pinecone) Index(index string) VectorStore {

@@ -7,10 +7,11 @@ import (
 func main() {
 	// Initialize the app config.
 	plum.Boot(plum.Initialize{
-		Embedding:        "openai",
-		LLM:              "openai",
-		VectorStore:      "pinecone",
-		VectorStoreIndex: "knowledge",
+		Embedding: "openai",
+		LLM:       "openai",
+		VectorStoreConfig: plum.VectorStoreConfig{
+			Db:      "pinecone",
+			Indexes: []string{"knowledge", "structured"}},
 	})
 
 	// chat history is a slice of ChatHistory structs. Handled by the client.
