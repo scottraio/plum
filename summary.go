@@ -17,7 +17,7 @@ func (s *Summary) Summarize(prompt string) string {
 	app := GetApp()
 	SummarizedPrompt := s.injectSummaryToPrompt(prompt)
 
-	return app.OpenAI.Run(SummarizedPrompt)
+	return app.LLM.Run(SummarizedPrompt)
 }
 
 // injectSummaryToPrompt injects the summary to the prompt.

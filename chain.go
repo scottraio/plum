@@ -34,7 +34,7 @@ func (c *Chain) Result() string {
 
 func (c *Chain) run(app AppConfig) string {
 	c.InjectInputsToChainPrompt()
-	c.Answer.Value = app.OpenAI.Run(c.Prompt)
+	c.Answer.Value = app.LLM.Run(c.Prompt)
 
 	return c.Answer.Value
 }

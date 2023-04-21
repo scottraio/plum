@@ -2,38 +2,33 @@ package plum
 
 import (
 	"fmt"
-	"log"
-	"os"
 
-	"github.com/joho/godotenv"
+	embeddings "github.com/scottraio/plum/embeddings"
+	llms "github.com/scottraio/plum/llms"
+	store "github.com/scottraio/plum/vectorstores"
 )
 
 var App *AppConfig
 
 // AppConfig represents the app config.
 type AppConfig struct {
-	PineconeKey       string
-	PineconeEnv       string
-	PineconeProjectId string
-	Pinecone          Pinecone
-	OpenAIToken       string
-	OpenAI            OpenAI
-	Port              string
-	Verbose           bool
+	Port               string
+	Verbose            bool
+	VectorStore        store.VectorStore
+	VectorStoreIndexes []string
+	LLM                llms.LLM
+	Embedding          embeddings.Embedding
 }
 
 // Init initializes the app config.
-func Init() AppConfig {
+func Boot(init Initialize) AppConfig {
 	App = &AppConfig{
-		PineconeKey:       getDotEnvVariable("PINECONE_API_KEY"),
-		PineconeEnv:       getDotEnvVariable("PINECONE_ENV"),
-		PineconeProjectId: getDotEnvVariable("PINECONE_PROJECT_ID"),
-		OpenAIToken:       getDotEnvVariable("OPENAI_API_KEY"),
-		Port:              getDotEnvVariable("PORT"),
-		Verbose:           getDotEnvVariable("VERBOSE") == "true",
+		Port:        GetDotEnvVariable("PORT"),
+		Verbose:     GetDotEnvVariable("VERBOSE") == "true",
+		Embedding:   InitEmbeddings(init),
+		LLM:         InitLLM(init),
+		VectorStore: InitVectorStore(init),
 	}
-
-	App.OpenAI = *NewOpenAI(App.OpenAIToken)
 
 	return *App
 }
@@ -55,16 +50,4 @@ func (a *AppConfig) Log(label string, message string, color string) {
 			return
 		}
 	}
-}
-
-// use godot package to load/read the .env file and
-// return the value of the key
-func getDotEnvVariable(key string) string {
-	// load .env file
-	err := godotenv.Load()
-	if err != nil && !os.IsNotExist(err) {
-		log.Fatal("Could not load .env file")
-	}
-
-	return os.Getenv(key)
 }

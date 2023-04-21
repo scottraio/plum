@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	llms "github.com/scottraio/plum/llms"
 )
 
 const DECISION_PROMPT = `
@@ -74,7 +76,7 @@ func NewAgent(input string, prompt string, memory Memory, tools []Tool) *Agent {
 
 // Run executes the agent's decision-making process.
 func (a *Agent) Run() string {
-	a.Decide(&a.App.OpenAI)
+	a.Decide(a.App.LLM)
 
 	summary := a.RunActions()
 
@@ -90,7 +92,7 @@ func (a *Agent) Run() string {
 }
 
 // Decide makes a decision based on the agent's input and memory.
-func (a *Agent) Decide(llm *OpenAI) Decision {
+func (a *Agent) Decide(llm llms.LLM) Decision {
 	decision := llm.Run(a.DecisionPrompt)
 
 	// Parse the JSON response to get the Decision object
