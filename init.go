@@ -20,8 +20,8 @@ func InitLLM(init Initialize) llms.LLM {
 		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
 		l = llms.InitOpenAI(apiKey)
 	default:
-		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
-		l = llms.InitOpenAI(apiKey)
+		init.LLM = "openai"
+		InitLLM(init)
 	}
 
 	return l
@@ -35,8 +35,8 @@ func InitEmbeddings(init Initialize) embeddings.Embedding {
 		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
 		e = embeddings.InitOpenAI(apiKey)
 	default:
-		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
-		e = embeddings.InitOpenAI(apiKey)
+		init.Embedding = "openai"
+		InitEmbeddings(init)
 	}
 
 	return e
@@ -50,14 +50,12 @@ func InitVectorStore(init Initialize) map[string]store.VectorStore {
 		apiKey := GetDotEnvVariable("PINECONE_API_KEY")
 		env := GetDotEnvVariable("PINECONE_ENV")
 		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
-		embed := App.Embedding.EmbedText
-		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, &embed)
+
+		embed := func(input string) []float32 { return App.Embedding.EmbedText(input) }
+		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, embed)
 	default:
-		apiKey := GetDotEnvVariable("PINECONE_API_KEY")
-		env := GetDotEnvVariable("PINECONE_ENV")
-		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
-		embed := App.Embedding.EmbedText
-		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, &embed)
+		init.VectorStoreConfig.Db = "pinecone"
+		InitVectorStore(init)
 	}
 
 	return v

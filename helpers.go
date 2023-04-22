@@ -72,6 +72,24 @@ func (a *AppConfig) CSVToVector(content string) [][]float32 {
 	return vectors
 }
 
+func (a *AppConfig) CSVToStrings(content string) []string {
+	csvReader := csv.NewReader(strings.NewReader(content))
+	csvMap := CSVToMap(csvReader)
+
+	docs := []string{}
+
+	// process each row
+	for _, row := range csvMap {
+		var doc string
+		for key, value := range row {
+			doc += fmt.Sprintf("%s: %s\n", key, value)
+		}
+		docs = append(docs, doc)
+	}
+
+	return docs
+}
+
 // use godot package to load/read the .env file and
 // return the value of the key
 func GetDotEnvVariable(key string) string {

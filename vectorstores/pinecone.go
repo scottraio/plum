@@ -36,7 +36,7 @@ func InitPinecone(apiKey string,
 	env string,
 	projectId string,
 	indexes []string,
-	embedFunc *func(text string) []float32) map[string]VectorStore {
+	embedFunc func(text string) []float32) map[string]VectorStore {
 	indexMap := make(map[string]VectorStore)
 
 	for _, index := range indexes {
@@ -49,6 +49,7 @@ func InitPinecone(apiKey string,
 		pinecone := Pinecone{
 			Config:    *config,
 			IndexName: index,
+			EmbedFunc: embedFunc,
 		}
 
 		indexMap[index] = pinecone.NewClient()
@@ -97,9 +98,10 @@ func (p *Pinecone) Query(input string) string {
 		Queries: []*pinecone_grpc.QueryVector{
 			{Values: embeddings},
 		},
-		TopK:          1000,
-		IncludeValues: true,
-		Namespace:     p.Namespace,
+		TopK:            3,
+		IncludeValues:   false,
+		IncludeMetadata: true,
+		Namespace:       p.Namespace,
 	})
 
 	if queryErr != nil {
@@ -109,20 +111,26 @@ func (p *Pinecone) Query(input string) string {
 	}
 
 	// return the first result
-	return "implement me"
+	return queryResult.Results[0].Matches[0].Metadata.String()
 }
 
 // Upsert upserts a document into the Pinecone index.
 func (p *Pinecone) Upsert(namespace string, text string) error {
 	var vects []*pinecone_grpc.Vector
+	// get the embeddings
+	embeddings := p.EmbedFunc(text)
 
 	meta := structpb.Struct{
-		Fields: map[string]*structpb.Value{"text": {Kind: &structpb.Value_StringValue{StringValue: text}}},
+		Fields: map[string]*structpb.Value{
+			"text": {
+				Kind: &structpb.Value_StringValue{StringValue: text},
+			},
+		},
 	}
 
 	vects = append(vects, &pinecone_grpc.Vector{
 		Id:       uuid.New().String(),
-		Values:   p.EmbedFunc(text),
+		Values:   embeddings,
 		Metadata: &meta,
 	})
 
