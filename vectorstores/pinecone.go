@@ -106,12 +106,22 @@ func (p *Pinecone) Query(input string) string {
 
 	if queryErr != nil {
 		log.Fatalf("query error: %v", queryErr)
-	} else {
-		log.Printf("query result: %v", queryResult)
 	}
 
 	// return the first result
-	return queryResult.Results[0].Matches[0].Metadata.String()
+	// var resultString string
+
+	// for _, match := range queryResult.Results[0].Matches {
+	// 	resultString += match.Metadata.Fields["text"].Value.StringValue
+	// }
+
+	var resultString string
+	for _, match := range queryResult.Results[0].Matches {
+		resultString += p.capText(match.Metadata.Fields["text"].GetStringValue())
+	}
+
+	return resultString
+
 }
 
 // Upsert upserts a document into the Pinecone index.
