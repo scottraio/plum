@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type PineconeConfig struct {
@@ -23,6 +24,7 @@ type PineconeConfig struct {
 type Pinecone struct {
 	VectorStore
 	Config    PineconeConfig
+	EmbedFunc func(text string) []float32
 	IndexName string
 	Namespace string
 	_Client   pinecone_grpc.VectorServiceClient
@@ -30,14 +32,18 @@ type Pinecone struct {
 }
 
 // InitPinecone initializes a Pinecone client.
-func InitPinecone(apiKey string, env string, productId string, indexes []string) map[string]VectorStore {
+func InitPinecone(apiKey string,
+	env string,
+	projectId string,
+	indexes []string,
+	embedFunc *func(text string) []float32) map[string]VectorStore {
 	indexMap := make(map[string]VectorStore)
 
 	for _, index := range indexes {
 		config := &PineconeConfig{
 			PineconeKey:       apiKey,
 			PineconeEnv:       env,
-			PineconeProjectId: productId,
+			PineconeProjectId: projectId,
 		}
 
 		pinecone := Pinecone{
@@ -82,9 +88,11 @@ func (p *Pinecone) NewClient() VectorStore {
 }
 
 // Query queries the Pinecone index.
-func (p *Pinecone) Query(embeddings []float32) string {
-	// client'
+func (p *Pinecone) Query(input string) string {
+	// get the embeddings
+	embeddings := p.EmbedFunc(input)
 
+	// client'
 	queryResult, queryErr := p._Client.Query(p._Context, &pinecone_grpc.QueryRequest{
 		Queries: []*pinecone_grpc.QueryVector{
 			{Values: embeddings},
@@ -105,12 +113,18 @@ func (p *Pinecone) Query(embeddings []float32) string {
 }
 
 // Upsert upserts a document into the Pinecone index.
-func (p *Pinecone) Upsert(namespace string, vectors [][]float32) error {
+func (p *Pinecone) Upsert(namespace string, text string) error {
 	var vects []*pinecone_grpc.Vector
 
-	for _, vector := range vectors {
-		vects = append(vects, &pinecone_grpc.Vector{Id: uuid.New().String(), Values: vector})
+	meta := structpb.Struct{
+		Fields: map[string]*structpb.Value{"text": {Kind: &structpb.Value_StringValue{StringValue: text}}},
 	}
+
+	vects = append(vects, &pinecone_grpc.Vector{
+		Id:       uuid.New().String(),
+		Values:   p.EmbedFunc(text),
+		Metadata: &meta,
+	})
 
 	_, upsertErr := p._Client.Upsert(p._Context, &pinecone_grpc.UpsertRequest{
 		Vectors:   vects,
@@ -121,9 +135,10 @@ func (p *Pinecone) Upsert(namespace string, vectors [][]float32) error {
 	return upsertErr
 }
 
-func (p *Pinecone) Index(index string) VectorStore {
-	p.IndexName = index
-	return p.NewClient()
+// WithNamespace sets the namespace for the Pinecone.
+func (p *Pinecone) WithNamespace(namespace string) VectorStore {
+	p.Namespace = namespace
+	return p.VectorStore
 }
 
 // capText caps the text at 1000 characters.

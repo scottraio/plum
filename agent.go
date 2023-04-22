@@ -39,6 +39,7 @@ Begin!
 // Agent represents an AI agent with decision-making capabilities.
 type Agent struct {
 	Input          string
+	VectorInput    []float32
 	Prompt         string
 	DecisionPrompt string
 	Decision       Decision
@@ -140,6 +141,7 @@ func (a *Agent) RunActions() []string {
 // GetNextAction returns the next action to take.
 func (a *Agent) RunAction(act Action) string {
 	var actionResult string
+
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
 			actionResult = tool.Func(act.ToolInput)
