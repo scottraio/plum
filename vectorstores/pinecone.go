@@ -89,9 +89,16 @@ func (p *Pinecone) NewClient() VectorStore {
 }
 
 // Query queries the Pinecone index.
-func (p *Pinecone) Query(input string) string {
+func (p *Pinecone) Query(input string, fields map[string]string) string {
+	var filtered structpb.Struct
 	// get the embeddings
 	embeddings := p.EmbedFunc(input)
+
+	if fields != nil {
+		filtered = structpb.Struct{
+			Fields: p.WithFields(fields),
+		}
+	}
 
 	// client'
 	queryResult, queryErr := p._Client.Query(p._Context, &pinecone_grpc.QueryRequest{
@@ -102,6 +109,7 @@ func (p *Pinecone) Query(input string) string {
 		IncludeValues:   false,
 		IncludeMetadata: true,
 		Namespace:       p.Namespace,
+		Filter:          &filtered,
 	})
 
 	if queryErr != nil {
@@ -109,7 +117,7 @@ func (p *Pinecone) Query(input string) string {
 	}
 
 	// return the first result
-	// var resultString string
+	// var resultString string&{"": ""}
 
 	// for _, match := range queryResult.Results[0].Matches {
 	// 	resultString += match.Metadata.Fields["text"].Value.StringValue
@@ -125,17 +133,17 @@ func (p *Pinecone) Query(input string) string {
 }
 
 // Upsert upserts a document into the Pinecone index.
-func (p *Pinecone) Upsert(namespace string, text string) error {
+func (p *Pinecone) Upsert(namespace string, text string, fields map[string]string) error {
 	var vects []*pinecone_grpc.Vector
+	var meta structpb.Struct
+
 	// get the embeddings
 	embeddings := p.EmbedFunc(text)
 
-	meta := structpb.Struct{
-		Fields: map[string]*structpb.Value{
-			"text": {
-				Kind: &structpb.Value_StringValue{StringValue: text},
-			},
-		},
+	fields["text"] = text
+
+	meta = structpb.Struct{
+		Fields: p.WithFields(fields),
 	}
 
 	vects = append(vects, &pinecone_grpc.Vector{
@@ -166,4 +174,16 @@ func (p *Pinecone) capText(text string) string {
 	}
 
 	return text
+}
+
+func (p *Pinecone) WithFields(fields map[string]string) map[string]*structpb.Value {
+	filtered := make(map[string]*structpb.Value)
+
+	for key, val := range fields {
+		filtered[key] = &structpb.Value{
+			Kind: &structpb.Value_StringValue{StringValue: val},
+		}
+	}
+
+	return filtered
 }

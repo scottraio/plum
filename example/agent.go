@@ -29,13 +29,13 @@ func CustomerServiceAgent(input string, memory plum.Memory) string {
 			"Part Number Lookup",
 			"Useful for finding information about parts.",
 			func(input string) string {
-				return app.VectorStore["structured"].Query(input)
+				return app.VectorStore["structured"].Query(input, nil)
 			}),
 		plum.UseTool(
 			"General Info",
 			"Useful for finding general information",
 			func(input string) string {
-				return app.VectorStore["knowledge"].Query(input)
+				return app.VectorStore["knowledge"].Query(input, nil)
 			}),
 	}
 
