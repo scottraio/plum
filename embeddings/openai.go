@@ -51,18 +51,21 @@ func (ai *OpenAI) EmbedText(text string) []float32 {
 		log.Fatal(err)
 	}
 
+	var out []float32
 	// Get the embeddings array from the data map
-	embeddingsArr := embedResp.Data[0].Embedding
+	if embedResp.Data != nil || len(embedResp.Data) != 0 {
+		embeddingsArr := embedResp.Data[0].Embedding
 
-	// Convert the embeddings array to a float64 slice
-	embeddings := make([]float64, len(embeddingsArr))
-	for i, v := range embeddingsArr {
-		embeddings[i] = v
+		// Convert the embeddings array to a float64 slice
+		embeddings := make([]float64, len(embeddingsArr))
+		for i, v := range embeddingsArr {
+			embeddings[i] = v
+		}
+
+		out = convertFloat64ArrayToFloat32Array(embeddings)
 	}
 
-	converted := convertFloat64ArrayToFloat32Array(embeddings)
-
-	return converted
+	return out
 }
 
 // GetEmbeddings returns the embeddings for the given text using the OpenAI API.
