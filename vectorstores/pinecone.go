@@ -36,7 +36,8 @@ func InitPinecone(apiKey string,
 	env string,
 	projectId string,
 	indexes []string,
-	embedFunc func(text string) []float32) map[string]VectorStore {
+	embedFunc func(text string) []float32,
+	namespace string) map[string]VectorStore {
 	indexMap := make(map[string]VectorStore)
 
 	for _, index := range indexes {
@@ -50,6 +51,7 @@ func InitPinecone(apiKey string,
 			Config:    *config,
 			IndexName: index,
 			EmbedFunc: embedFunc,
+			Namespace: namespace,
 		}
 
 		indexMap[index] = pinecone.NewClient()
@@ -133,7 +135,7 @@ func (p *Pinecone) Query(input string, fields map[string]string) string {
 }
 
 // Upsert upserts a document into the Pinecone index.
-func (p *Pinecone) Upsert(namespace string, text string, fields map[string]string) error {
+func (p *Pinecone) Upsert(text string, fields map[string]string) error {
 	var vects []*pinecone_grpc.Vector
 	var meta structpb.Struct
 
@@ -154,7 +156,7 @@ func (p *Pinecone) Upsert(namespace string, text string, fields map[string]strin
 
 	_, upsertErr := p._Client.Upsert(p._Context, &pinecone_grpc.UpsertRequest{
 		Vectors:   vects,
-		Namespace: namespace,
+		Namespace: p.Namespace,
 	})
 
 	// return the first result

@@ -50,9 +50,10 @@ func InitVectorStore(init Initialize) map[string]store.VectorStore {
 		apiKey := GetDotEnvVariable("PINECONE_API_KEY")
 		env := GetDotEnvVariable("PINECONE_ENV")
 		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
+		plumEnv := GetDotEnvVariable("PLUM_ENV")
 
 		embed := func(input string) []float32 { return App.Embedding.EmbedText(input) }
-		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, embed)
+		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, embed, plumEnv)
 	default:
 		init.VectorStoreConfig.Db = "pinecone"
 		InitVectorStore(init)

@@ -19,6 +19,7 @@ type AppConfig struct {
 	Embedding         embeddings.Embedding
 	Models            map[string]models.Model
 	Jobs              map[string]Job
+	Env               string
 }
 
 type VectorStoreConfig struct {
@@ -29,6 +30,7 @@ type VectorStoreConfig struct {
 // Init initializes the app config.
 func Boot(init Initialize) AppConfig {
 	App = &AppConfig{
+		Env:         GetDotEnvVariable("PLUM_ENV"),
 		Port:        GetDotEnvVariable("PORT"),
 		Verbose:     GetDotEnvVariable("VERBOSE") == "true",
 		Embedding:   InitEmbeddings(init),
