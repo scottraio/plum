@@ -5,8 +5,9 @@ import (
 )
 
 type Job struct {
-	App  AppConfig
-	Ctx  context.Context
-	Name string
-	Run  func() error
+	App        AppConfig
+	Ctx        context.Context
+	Name       string
+	Run        func() error
+	Attributes map[string]string
 }

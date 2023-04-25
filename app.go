@@ -19,6 +19,7 @@ type AppConfig struct {
 	Embedding         embeddings.Embedding
 	Models            map[string]models.Model
 	Jobs              map[string]Job
+	Agents            map[string]Agent
 	Env               string
 }
 
@@ -38,6 +39,7 @@ func Boot(init Initialize) AppConfig {
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]models.Model),
 		Jobs:        make(map[string]Job),
+		Agents:      make(map[string]Agent),
 	}
 
 	return App.boot()
@@ -58,6 +60,12 @@ func (a *AppConfig) RegisterModel(name string, m models.Model) {
 func (a *AppConfig) RegisterJob(name string, j Job) {
 	a.Log("Job", "Job "+name+" Registered ", "purple")
 	a.Jobs[name] = j
+}
+
+// Register Models
+func (a *AppConfig) RegisterAgent(name string, j Job) {
+	a.Log("Agent", "Agent "+name+" Registered ", "purple")
+	a.Agents[name] = j
 }
 
 // bootLog logs the app config.
