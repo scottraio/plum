@@ -15,14 +15,18 @@ type Model struct {
 	Return func(input string, filters map[string]string) string
 }
 
-func (m *Model) Filters(filters map[string]string) map[string]string {
-	return m.GetAttributes(filters)
+func (m *Model) SetAttributes(filters map[string]string) map[string]string {
+	attrs := m.GetAttributes()
+
+	for key, value := range filters {
+		attrs[key] = value
+	}
+
+	return attrs
 }
 
-func (m *Model) GetAttributes(attrs map[string]string) map[string]string {
-	if attrs == nil {
-		attrs = make(map[string]string)
-	}
+func (m *Model) GetAttributes() map[string]string {
+	attrs := make(map[string]string)
 
 	for key, value := range m.Attributes {
 		attrs[key] = value
@@ -43,7 +47,7 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 	docs := m.Train(ctx)
 
 	for _, doc := range docs {
-		err = m.VectorStore.Upsert(doc, m.GetAttributes(attrs))
+		err = m.VectorStore.Upsert(doc, m.SetAttributes(attrs))
 	}
 
 	return err

@@ -50,22 +50,22 @@ func GetApp() AppConfig {
 
 // Register Models
 func (a *AppConfig) RegisterModel(name string, m models.Model) {
-	a.Log("Model", "Model "+name+" Registered ", "white")
+	a.Log("Model", "Model "+name+" Registered ", "purple")
 	a.Models[name] = m
 }
 
 // Register Models
 func (a *AppConfig) RegisterJob(name string, j Job) {
-	a.Log("Job", "Job "+name+" Registered ", "white")
+	a.Log("Job", "Job "+name+" Registered ", "purple")
 	a.Jobs[name] = j
 }
 
 // bootLog logs the app config.
 func (a *AppConfig) boot() AppConfig {
-	a.Log("App", "Booted", "white")
+	a.Log("App", "Plum "+Version, "purple")
 
 	for key, _ := range a.VectorStore {
-		a.Log("Vector Store", "Index "+key+" Registered ", "white")
+		a.Log("Vector Store", "Index "+key+" Registered ", "purple")
 	}
 
 	return *a

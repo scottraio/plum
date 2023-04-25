@@ -94,6 +94,8 @@ func (a *Agent) Run() string {
 
 // Decide makes a decision based on the agent's input and memory.
 func (a *Agent) Decide(llm llms.LLM) Decision {
+	a.App.Log("Agent", "Thinking...", "gray")
+
 	decision := llm.Run(a.DecisionPrompt)
 
 	// Parse the JSON response to get the Decision object
@@ -103,9 +105,8 @@ func (a *Agent) Decide(llm llms.LLM) Decision {
 	}
 
 	// Verbose logging
-	a.App.Log("Question", a.Input, "green")
-	a.App.Log("Input", a.Decision.Question, "white")
-	a.App.Log("Thought", a.Decision.Thought, "white")
+	a.App.Log("Question", a.Input, "blue")
+	a.App.Log("Thought", a.Decision.Thought, "gray")
 
 	// Inject the agent's input and memory into the prompt
 	return a.Decision
@@ -115,14 +116,14 @@ func (a *Agent) Decide(llm llms.LLM) Decision {
 func (a *Agent) RunActions() []string {
 	summary := []string{}
 	no_actions := len(a.Decision.Actions)
-	a.App.Log("Number of actions", strconv.Itoa(no_actions), "white")
+	a.App.Log("Number of actions", strconv.Itoa(no_actions), "gray")
 
 	// Create a channel to receive the summaries from each goroutine
 	ch := make(chan string, no_actions)
 
 	for _, action := range a.Decision.Actions {
-		a.App.Log("Tool", action.Tool, "white")
-		a.App.Log("Tool Input", action.ToolInput, "white")
+		a.App.Log("Tool", action.Tool, "gray")
+		a.App.Log("Tool Input", action.ToolInput, "gray")
 
 		// Start a new goroutine for each action
 		go func(action Action) {

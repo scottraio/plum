@@ -4,21 +4,47 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
 // Log events with color
 func (a *AppConfig) Log(label string, message string, color string) {
+	msg := strings.ReplaceAll(message, "\n", "")
+	var colorStart string
+	var colorEnd string
+
+	defaultColorStart := "\033[1m\033[37m"
+	defaultColorEnd := "\033[0m"
+
+	// Get current date and time
+	now := time.Now()
+
+	// Format the date and time as desired
+	dateTimeStr := now.Format("2006-01-02 15:04:05")
+
 	if a.Verbose {
 		switch color {
+		case "purple":
+			colorStart = "\033[1m\033[35m"
+			colorEnd = "\033[0m"
 		case "green":
-			fmt.Println("\033[1m\033[32m["+label+"]", message, "\033[0m")
-			return
+			colorStart = "\033[1m\033[32m"
+			colorEnd = "\033[0m"
+		case "lightblue":
+			colorStart = "\033[1m\033[36m"
+			colorEnd = "\033[0m"
+		case "gray":
+			colorStart = "\033[1m\033[30m"
+			colorEnd = "\033[0m"
 		default:
-			fmt.Println("\033[1m\033[37m["+label+"]", message, "\033[0m")
-			return
+			colorStart = defaultColorStart
+			colorEnd = defaultColorEnd
 		}
+
+		fmt.Println(colorStart, "["+dateTimeStr+"]", "["+label+"]", msg, colorEnd)
 	}
 }
 
