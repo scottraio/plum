@@ -163,6 +163,22 @@ func (p *Pinecone) Upsert(text string, fields map[string]string) error {
 	return upsertErr
 }
 
+// purge
+func (p *Pinecone) Purge(namespace string) error {
+	deleteResult, deleteErr := p._Client.Delete(p._Context, &pinecone_grpc.DeleteRequest{
+		DeleteAll: true,
+		Namespace: namespace,
+	})
+
+	if deleteErr != nil {
+		log.Fatalf("delete error: %v", deleteErr)
+	} else {
+		log.Printf("delete result: %v", deleteResult)
+	}
+
+	return deleteErr
+}
+
 // WithNamespace sets the namespace for the Pinecone.
 func (p *Pinecone) WithNamespace(namespace string) VectorStore {
 	p.Namespace = namespace

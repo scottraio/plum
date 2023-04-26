@@ -39,6 +39,9 @@ func (a *AppConfig) Log(label string, message string, color string) {
 		case "gray":
 			colorStart = "\033[1m\033[30m"
 			colorEnd = "\033[0m"
+		case "orange":
+			colorStart = "\033[1m\033[33m"
+			colorEnd = "\033[0m"
 		default:
 			colorStart = defaultColorStart
 			colorEnd = defaultColorEnd

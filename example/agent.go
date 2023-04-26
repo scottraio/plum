@@ -40,8 +40,8 @@ func CustomerServiceAgent(input string, memory plum.Memory) string {
 	}
 
 	// Create the agent.
-	agent := plum.NewAgent(input, AGENT_PROMPT, memory, tools)
+	agent := plum.NewAgent(AGENT_PROMPT, tools)
 
 	// Run the agent.
-	return agent.Run()
+	return agent.Run(input, &memory)
 }

@@ -18,7 +18,6 @@ type AppConfig struct {
 	LLM               llms.LLM
 	Embedding         embeddings.Embedding
 	Models            map[string]models.Model
-	Jobs              map[string]Job
 	Agents            map[string]Agent
 	Env               string
 }
@@ -38,7 +37,6 @@ func Boot(init Initialize) AppConfig {
 		LLM:         InitLLM(init),
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]models.Model),
-		Jobs:        make(map[string]Job),
 		Agents:      make(map[string]Agent),
 	}
 
@@ -56,23 +54,17 @@ func (a *AppConfig) RegisterModel(name string, m models.Model) {
 	a.Models[name] = m
 }
 
-// Register Models
-func (a *AppConfig) RegisterJob(name string, j Job) {
-	a.Log("Job", "Job "+name+" Registered ", "purple")
-	a.Jobs[name] = j
-}
-
-// Register Models
-func (a *AppConfig) RegisterAgent(name string, j Job) {
+// Register Agents
+func (a *AppConfig) RegisterAgent(name string, ag Agent) {
 	a.Log("Agent", "Agent "+name+" Registered ", "purple")
-	a.Agents[name] = j
+	a.Agents[name] = ag
 }
 
 // bootLog logs the app config.
 func (a *AppConfig) boot() AppConfig {
 	a.Log("App", "Plum "+Version, "purple")
 
-	for key, _ := range a.VectorStore {
+	for key := range a.VectorStore {
 		a.Log("Vector Store", "Index "+key+" Registered ", "purple")
 	}
 

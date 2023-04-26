@@ -14,12 +14,15 @@ import (
 const DECISION_PROMPT = `
 Instructions:
 1. You are a JSON api that determines what action or actions, to take based on the question and tools.
-2. Each action can only be one of the following: {{.GetToolNamesAsJSON}} 
-3. You remember the following: {{.PromptMemory}}
+
+2. Each action can only be one of the following tools: 
+{{.GetToolsAsText}} 
+
+3. You remember the following: 
+{{.PromptMemory}}
 
 
 Respond with the following JSON format:
-
 
 {
 	"Question": "{{.Input}}",
@@ -27,7 +30,8 @@ Respond with the following JSON format:
 	"Actions": [
 		{
 			"Tool": "the tool to use",
-			"Input": "the input for the tool as string"
+			"Reasoning": "the reasoning for using the tool",
+			"Input": "keywords"
 		}
 	]	
 }
@@ -43,7 +47,7 @@ type Agent struct {
 	Prompt         string
 	DecisionPrompt string
 	Decision       Decision
-	Memory         Memory
+	Memory         *Memory
 	PromptMemory   string
 	Tools          []Tool
 	ToolNames      []string
@@ -59,24 +63,25 @@ type Decision struct {
 type Action struct {
 	Tool      string `json:"Tool"`
 	ToolInput string `json:"Input"`
+	Reasoning string `json:"Reasoning"`
 }
 
 // NewAgent creates a new agent with the given input, prompt, memory, and tools.
-func NewAgent(input string, prompt string, memory Memory, tools []Tool) *Agent {
+func NewAgent(prompt string, tools []Tool) *Agent {
 	agent := &Agent{
 		App:            GetApp(),
-		Input:          input,
+		Input:          "",
 		DecisionPrompt: DECISION_PROMPT,
 		Prompt:         prompt,
-		Memory:         memory,
-		Tools:          tools,
-		PromptMemory:   memory.Format()}
-	agent.InjectInputsToDecisionPrompt()
+		Memory:         &Memory{},
+		Tools:          tools}
 	return agent
 }
 
 // Run executes the agent's decision-making process.
-func (a *Agent) Run() string {
+func (a *Agent) Run(input string, memory *Memory) string {
+	a.InjectInputsToDecisionPrompt(input, memory)
+
 	a.Decide(a.App.LLM)
 
 	summary := a.RunActions()
@@ -123,6 +128,7 @@ func (a *Agent) RunActions() []string {
 
 	for _, action := range a.Decision.Actions {
 		a.App.Log("Tool", action.Tool, "gray")
+		a.App.Log("Tool Reasoning", action.Reasoning, "gray")
 		a.App.Log("Tool Input", action.ToolInput, "gray")
 
 		// Start a new goroutine for each action
@@ -166,8 +172,22 @@ func (a *Agent) GetToolNamesAsJSON() string {
 	return string(toolNamesJSON)
 }
 
+// GetToolNamesAsJSON returns the agent's tool names as a JSON string.
+func (a *Agent) GetToolsAsText() string {
+	prompt := ""
+	for _, tool := range a.Tools {
+		prompt += tool.Name + " (" + tool.Description + ")\n"
+	}
+
+	return prompt
+}
+
 // InjectInputsToDecisionPrompt injects the agent's input and memory into the decision prompt.
-func (a *Agent) InjectInputsToDecisionPrompt() *Agent {
+func (a *Agent) InjectInputsToDecisionPrompt(input string, memory *Memory) *Agent {
+	a.Input = input
+	a.Memory = memory
+	a.PromptMemory = memory.Format()
+
 	for _, tool := range a.Tools {
 		a.ToolNames = append(a.ToolNames, tool.Name+" ("+tool.Description+")")
 	}

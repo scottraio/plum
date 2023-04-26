@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 
+	"github.com/schollz/progressbar/v3"
 	store "github.com/scottraio/plum/vectorstores"
 )
 
@@ -21,6 +22,8 @@ func (m *Model) SetAttributes(filters map[string]string) map[string]string {
 	for key, value := range filters {
 		attrs[key] = value
 	}
+
+	m.Attributes = attrs
 
 	return attrs
 }
@@ -46,8 +49,14 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 	ctx := context.Background()
 	docs := m.Train(ctx)
 
+	// Create a new progress bar with the total number of documents
+	bar := progressbar.Default(int64(len(docs)))
+
 	for _, doc := range docs {
 		err = m.VectorStore.Upsert(doc, m.SetAttributes(attrs))
+
+		// Increment the progress bar after each iteration
+		bar.Add(1)
 	}
 
 	return err
