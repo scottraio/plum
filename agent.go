@@ -31,7 +31,7 @@ Respond with the following JSON format:
 		{
 			"Tool": "the tool to use",
 			"Reasoning": "the reasoning for using the tool",
-			"Input": "keywords"
+			"Input": "input to the tool"
 		}
 	]	
 }
