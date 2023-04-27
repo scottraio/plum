@@ -91,7 +91,7 @@ func (p *Pinecone) NewClient() VectorStore {
 }
 
 // Query queries the Pinecone index.
-func (p *Pinecone) Query(input string, fields map[string]string) string {
+func (p *Pinecone) Query(input string, fields map[string]string, options map[string]interface{}) string {
 	var filtered structpb.Struct
 	// get the embeddings
 	embeddings := p.EmbedFunc(input)
@@ -102,15 +102,17 @@ func (p *Pinecone) Query(input string, fields map[string]string) string {
 		}
 	}
 
+	opts := p.queryOptions(options)
+
 	// client'
 	queryResult, queryErr := p._Client.Query(p._Context, &pinecone_grpc.QueryRequest{
 		Queries: []*pinecone_grpc.QueryVector{
 			{Values: embeddings},
 		},
-		TopK:            3,
+		TopK:            opts["TopK"].(uint32),
 		IncludeValues:   false,
 		IncludeMetadata: true,
-		Namespace:       p.Namespace,
+		Namespace:       opts["Namespace"].(string),
 		Filter:          &filtered,
 	})
 
@@ -132,6 +134,24 @@ func (p *Pinecone) Query(input string, fields map[string]string) string {
 
 	return resultString
 
+}
+
+func (p *Pinecone) queryOptions(options map[string]interface{}) map[string]interface{} {
+	defaults := map[string]interface{}{
+		"TopK":      uint32(1),
+		"Namespace": p.Namespace,
+	}
+
+	for key, value := range options {
+		if key == "TopK" {
+			defaults["TopK"] = uint32(value.(int))
+		} else {
+			defaults[key] = value
+		}
+
+	}
+
+	return defaults
 }
 
 // Upsert upserts a document into the Pinecone index.
@@ -187,8 +207,8 @@ func (p *Pinecone) WithNamespace(namespace string) VectorStore {
 
 // capText caps the text at 1000 characters.
 func (p *Pinecone) capText(text string) string {
-	if len(text) > 1000 {
-		return text[:1000]
+	if len(text) > 3000 {
+		return text[:3000]
 	}
 
 	return text

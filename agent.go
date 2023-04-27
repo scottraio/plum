@@ -13,25 +13,30 @@ import (
 
 const DECISION_PROMPT = `
 Instructions:
-1. You are a JSON api that determines what action or actions, to take based on the question and tools.
+1. You are a JSON api that determines what action, actions or no action, to take based on the question and tools.
 
 2. Each action can only be one of the following tools: 
 {{.GetToolsAsText}} 
 
+3. You will create a plan of action by thinking about what actions do i need to take to answer the question. 
+
 3. You remember the following: 
 {{.PromptMemory}}
+
+4. You hold the following truths:
+{{.Truths}}
 
 
 Respond with the following JSON format:
 
 {
 	"Question": "{{.Input}}",
-	"Thought": "think about what actions do i need to take to answer the question?",
+	"Thought": "think about what actions and inputs do i need to take to answer the question?",
 	"Actions": [
 		{
 			"Tool": "the tool to use",
 			"Reasoning": "the reasoning for using the tool",
-			"Input": "input to the tool"
+			"Input": "the no prose input to the tool"
 		}
 	]	
 }
@@ -51,6 +56,7 @@ type Agent struct {
 	PromptMemory   string
 	Tools          []Tool
 	ToolNames      []string
+	Truths         string
 	App            AppConfig
 }
 
@@ -67,13 +73,14 @@ type Action struct {
 }
 
 // NewAgent creates a new agent with the given input, prompt, memory, and tools.
-func NewAgent(prompt string, tools []Tool) *Agent {
+func NewAgent(prompt string, tools []Tool, truths string) *Agent {
 	agent := &Agent{
 		App:            GetApp(),
 		Input:          "",
 		DecisionPrompt: DECISION_PROMPT,
 		Prompt:         prompt,
 		Memory:         &Memory{},
+		Truths:         truths,
 		Tools:          tools}
 	return agent
 }
@@ -88,7 +95,7 @@ func (a *Agent) Run(input string, memory *Memory) string {
 
 	s := Summary{
 		Question:     a.Input,
-		Summary:      strings.Join(summary, "\n"),
+		Summary:      RemoveCommonWords(strings.Join(summary, "\n")),
 		PromptMemory: a.PromptMemory}
 
 	answer := s.Summarize(a.Prompt)
@@ -152,6 +159,7 @@ func (a *Agent) RunAction(act Action) string {
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
 			actionResult = tool.Func(act.ToolInput)
+			a.App.Log("Tool Output", actionResult, "white")
 			break
 		}
 	}
@@ -176,7 +184,7 @@ func (a *Agent) GetToolNamesAsJSON() string {
 func (a *Agent) GetToolsAsText() string {
 	prompt := ""
 	for _, tool := range a.Tools {
-		prompt += tool.Name + " (" + tool.Description + ")\n"
+		prompt += tool.Name + "\n" + tool.Description + "\n"
 	}
 
 	return prompt

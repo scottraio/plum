@@ -1,5 +1,0 @@
-package plum
-
-func Query() {
-
-}

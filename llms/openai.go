@@ -54,7 +54,7 @@ func (ai *OpenAI) Run(prompt string) string {
 
 	if err != nil {
 		fmt.Printf("ChatCompletion error: %v\n", err)
-		return "Error"
+		return "There was an error with the AI Engine. Please try again."
 	}
 
 	return resp.Choices[0].Message.Content

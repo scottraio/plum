@@ -52,7 +52,7 @@ func (a *AppConfig) Log(label string, message string, color string) {
 }
 
 func (a *AppConfig) Vectorize(text string) []float32 {
-	return a.Embedding.EmbedText(text)
+	return a.Embedding(text)
 }
 
 // use godot package to load/read the .env file and

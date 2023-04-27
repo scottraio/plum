@@ -2,6 +2,7 @@ package plum
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 )
 
@@ -12,12 +13,39 @@ type Summary struct {
 	Question     string `json:"question"`
 }
 
+func RemoveCommonWords(summary string) string {
+	var simple string
+
+	listOfCommonWords := []string{
+		"the ",
+		"a ",
+		"an ",
+		"is ",
+		"are ",
+		"was ",
+		"were ",
+		"has ",
+		"have ",
+		"had ",
+		"been ",
+		"to ",
+		"of ",
+		"for ",
+	}
+
+	// replace common words from summary like "the" and "a"
+	for _, word := range listOfCommonWords {
+		simple = strings.ReplaceAll(summary, word, "")
+	}
+
+	return simple
+}
+
 // Summarize summarizes the prompt.
 func (s *Summary) Summarize(prompt string) string {
-	app := GetApp()
 	SummarizedPrompt := s.injectSummaryToPrompt(prompt)
 
-	return app.LLM.Run(SummarizedPrompt)
+	return App.LLM.Run(SummarizedPrompt)
 }
 
 // injectSummaryToPrompt injects the summary to the prompt.

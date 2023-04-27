@@ -7,7 +7,7 @@ import (
 )
 
 type Initialize struct {
-	Embedding         string
+	Embedding         func(input string) []float32
 	LLM               string
 	VectorStoreConfig VectorStoreConfig
 }
@@ -27,16 +27,16 @@ func InitLLM(init Initialize) llms.LLM {
 	return l
 }
 
-func InitEmbeddings(init Initialize) embeddings.Embedding {
-	var e embeddings.Embedding
+func InitEmbeddings(embed string) func(input string) []float32 {
+	var e func(input string) []float32
 
-	switch init.Embedding {
+	switch embed {
 	case "openai":
 		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
-		e = embeddings.InitOpenAI(apiKey)
+		embed := embeddings.InitOpenAI(apiKey)
+		e = embed.EmbedText
 	default:
-		init.Embedding = "openai"
-		InitEmbeddings(init)
+		InitEmbeddings("openai")
 	}
 
 	return e
@@ -52,8 +52,7 @@ func InitVectorStore(init Initialize) map[string]store.VectorStore {
 		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
 		plumEnv := GetDotEnvVariable("PLUM_ENV")
 
-		embed := func(input string) []float32 { return App.Embedding.EmbedText(input) }
-		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, embed, plumEnv)
+		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, init.Embedding, plumEnv)
 	default:
 		init.VectorStoreConfig.Db = "pinecone"
 		InitVectorStore(init)

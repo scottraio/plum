@@ -1,7 +1,6 @@
 package plum
 
 import (
-	embeddings "github.com/scottraio/plum/embeddings"
 	llms "github.com/scottraio/plum/llms"
 	"github.com/scottraio/plum/models"
 	store "github.com/scottraio/plum/vectorstores"
@@ -16,7 +15,7 @@ type AppConfig struct {
 	VectorStore       map[string]store.VectorStore
 	VectorStoreConfig VectorStoreConfig
 	LLM               llms.LLM
-	Embedding         embeddings.Embedding
+	Embedding         func(input string) []float32
 	Models            map[string]models.Model
 	Agents            map[string]Agent
 	Env               string
@@ -33,7 +32,7 @@ func Boot(init Initialize) AppConfig {
 		Env:         GetDotEnvVariable("PLUM_ENV"),
 		Port:        GetDotEnvVariable("PORT"),
 		Verbose:     GetDotEnvVariable("VERBOSE") == "true",
-		Embedding:   InitEmbeddings(init),
+		Embedding:   init.Embedding,
 		LLM:         InitLLM(init),
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]models.Model),

@@ -7,7 +7,7 @@ import (
 func main() {
 	// Initialize the app config.
 	plum.Boot(plum.Initialize{
-		Embedding: "openai",
+		Embedding: plum.InitEmbeddings("openai"),
 		LLM:       "openai",
 		VectorStoreConfig: plum.VectorStoreConfig{
 			Db:      "pinecone",
