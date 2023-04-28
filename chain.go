@@ -23,18 +23,16 @@ type Answer struct {
 }
 
 func (c *Chain) Result() string {
-	app := GetApp()
+	//c.Answer.Question = c.Input
+	//c.Answer.Context = c.Action(c.Input)
+	//c.Answer.PromptMemory = c.Memory.Format()
 
-	c.Answer.Question = c.Input
-	c.Answer.Context = c.Action(c.Input)
-	c.Answer.PromptMemory = c.Memory.Format()
-
-	return c.run(app)
+	return c.Run()
 }
 
-func (c *Chain) run(app AppConfig) string {
+func (c *Chain) Run() string {
 	c.InjectInputsToChainPrompt()
-	c.Answer.Value = app.LLM.Run(c.Prompt)
+	c.Answer.Value = App.LLM.Run(c.Prompt)
 
 	return c.Answer.Value
 }
@@ -52,7 +50,7 @@ func (c *Chain) injectInputsToPrompt(prompt string) string {
 		return ""
 	}
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, c.Answer); err != nil {
+	if err := tmpl.Execute(&buf, c); err != nil {
 		return ""
 	}
 
