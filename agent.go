@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	llms "github.com/scottraio/plum/llms"
+	"github.com/scottraio/plum/models"
 )
 
 const DECISION_PROMPT = `
@@ -20,10 +21,10 @@ Instructions:
 
 3. You will create a plan of action by thinking about what actions do i need to take to answer the question. 
 
-3. You remember the following: 
+5. You remember the following: 
 {{.PromptMemory}}
 
-4. You hold the following truths:
+6. You hold the following truths:
 {{.Truths}}
 
 
@@ -36,7 +37,7 @@ Respond with the following JSON format:
 		{
 			"Tool": "the tool to use",
 			"Reasoning": "the reasoning for using the tool",
-			"Input": "the no prose input to the tool"
+			"Input": "{"query": "the query", "filter": {"key": "value as string"}, "options": {"key": "value as any type"}}"
 		}
 	]	
 }
@@ -158,7 +159,9 @@ func (a *Agent) RunAction(act Action) string {
 
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
-			actionResult = tool.Func(act.ToolInput)
+			var queryBuilder models.QueryBuilder
+			json.Unmarshal([]byte(act.ToolInput), &queryBuilder)
+			actionResult = tool.Func(&queryBuilder)
 			a.App.Log("Tool Output", actionResult, "white")
 			break
 		}

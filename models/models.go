@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/schollz/progressbar/v3"
 	store "github.com/scottraio/plum/vectorstores"
@@ -13,7 +14,13 @@ type Model struct {
 	VectorStore store.VectorStore
 
 	Train  func(ctx context.Context) []string
-	Return func(input string, filters map[string]string) string
+	Return func(qb *QueryBuilder) string
+}
+
+type QueryBuilder struct {
+	Query   string
+	Filters map[string]string
+	Options map[string]interface{}
 }
 
 func (m *Model) SetAttributes(filters map[string]string) map[string]string {
@@ -60,4 +67,10 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 	}
 
 	return err
+}
+
+func (m *Model) QueryBuilder(jsonString string) QueryBuilder {
+	qb := QueryBuilder{}
+	json.Unmarshal([]byte(jsonString), &qb)
+	return qb
 }
