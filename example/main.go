@@ -2,11 +2,13 @@ package example
 
 import (
 	plum "github.com/scottraio/plum"
+	agents "github.com/scottraio/plum/example/agents"
+	models "github.com/scottraio/plum/example/models"
 )
 
 func main() {
 	// Initialize the app config.
-	plum.Boot(plum.Initialize{
+	boot := plum.Boot(plum.Initialize{
 		Embedding: plum.InitEmbeddings("openai"),
 		LLM:       "openai",
 		VectorStoreConfig: plum.VectorStoreConfig{
@@ -20,6 +22,10 @@ func main() {
 		Answer: "I'm sorry to hear that. What seems to be the problem?",
 	})
 
+	// Register the models.
+	// TODO: Automatically register models.
+	boot.RegisterModel("knowledge", models.Knowledge())
+
 	// Call the agent with the input and chat history.
-	CustomerServiceAgent("I need help with my [Product Name]", chatHistory)
+	agents.CustomerServiceAgent("I need help with my [Product Name]", chatHistory)
 }

@@ -19,8 +19,6 @@ func (m *Markdown) Split(text string) []string {
 		"\n\n***\n\n",
 		"\n\n---\n\n",
 		"\n\n___\n\n",
-		"\n\n",
-		"\n",
 	}
 
 	// Split the Markdown text into an array of strings

@@ -1,19 +1,29 @@
 package plum
 
 import (
-	models "github.com/scottraio/plum/models"
+	llm "github.com/scottraio/plum/llms"
+	retriever "github.com/scottraio/plum/retrievers"
 )
 
 type Tool struct {
 	Name        string
 	Description string
-	Func        func(query *models.QueryBuilder) string
+	HowTo       string
+	Func        func(query retriever.QueryBuilder) string
 }
 
-func UseTool(name string, desc string, run func(query *models.QueryBuilder) string) Tool {
-	return Tool{
-		Name:        name,
-		Description: desc,
-		Func:        run,
-	}
+func (t *Tool) Prompt() string {
+	template := `
+		
+		Name: {{.Name}} 
+		Reasoning: {{.Description}}
+			
+		How to use: 
+		{{.HowTo}}
+		
+		----------------------------------------------
+
+		`
+
+	return llm.InjectObjectToPrompt(t, template)
 }

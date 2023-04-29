@@ -1,7 +1,8 @@
-package example
+package agents
 
 import (
 	plum "github.com/scottraio/plum"
+	retriever "github.com/scottraio/plum/retrievers"
 )
 
 const AGENT_PROMPT = `
@@ -25,18 +26,23 @@ func CustomerServiceAgent(input string, memory plum.Memory) string {
 
 	// Tools are the actions the agent can take.
 	tools := []plum.Tool{
-		plum.UseTool(
-			"Part Number Lookup",
-			"Useful for finding information about parts.",
-			func(input string) string {
+		{
+			Name:        "Part Number Lookup",
+			Description: "Useful for finding information about parts.",
+			HowTo:       "Use the part number to find the answer",
+			Func: func(query retriever.QueryBuilder) string {
 				return app.VectorStore["structured"].Query(input, nil, nil)
-			}),
-		plum.UseTool(
-			"General Info",
-			"Useful for finding general information",
-			func(input string) string {
-				return app.VectorStore["knowledge"].Query(input, nil, nil)
-			}),
+			},
+		},
+		{
+			Name:        "General Info",
+			Description: "Useful for finding general information",
+			HowTo:       "Use the knowledge base to find the answer",
+			Func: func(query retriever.QueryBuilder) string {
+				lookup := plum.App.Models["knowledge"].Return(query)
+				return lookup
+			},
+		},
 	}
 
 	// Create the agent.

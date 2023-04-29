@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	llm "github.com/scottraio/plum/llms"
 )
 
 // Log events with color
@@ -71,4 +72,8 @@ func FatalIfError(msg string, err error) {
 	if err != nil {
 		log.Fatalf("%s: %v", msg, err)
 	}
+}
+
+func InjectObjectToPrompt(obj interface{}, prompt string) string {
+	return llm.InjectObjectToPrompt(obj, prompt)
 }

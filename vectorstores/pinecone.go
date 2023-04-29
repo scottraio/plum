@@ -109,7 +109,7 @@ func (p *Pinecone) Query(input string, fields map[string]string, options map[str
 		Queries: []*pinecone_grpc.QueryVector{
 			{Values: embeddings},
 		},
-		TopK:            opts["TopK"].(uint32),
+		TopK:            20,
 		IncludeValues:   false,
 		IncludeMetadata: true,
 		Namespace:       opts["Namespace"].(string),
@@ -119,13 +119,6 @@ func (p *Pinecone) Query(input string, fields map[string]string, options map[str
 	if queryErr != nil {
 		log.Fatalf("query error: %v", queryErr)
 	}
-
-	// return the first result
-	// var resultString string&{"": ""}
-
-	// for _, match := range queryResult.Results[0].Matches {
-	// 	resultString += match.Metadata.Fields["text"].Value.StringValue
-	// }
 
 	var resultString string
 	for _, match := range queryResult.Results[0].Matches {
@@ -144,7 +137,7 @@ func (p *Pinecone) queryOptions(options map[string]interface{}) map[string]inter
 
 	for key, value := range options {
 		if key == "TopK" {
-			defaults["TopK"] = uint32(value.(int))
+			defaults["TopK"] = uint32(value.(float64))
 		} else {
 			defaults[key] = value
 		}

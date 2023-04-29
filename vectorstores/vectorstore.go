@@ -7,3 +7,9 @@ type VectorStore interface {
 	Purge(namespace string) error
 	WithNamespace(namespace string) VectorStore
 }
+
+// Vector is a struct that represents a vector that can be stored in a vector store.
+type Vector struct {
+	Text     string
+	MetaData map[string]string
+}

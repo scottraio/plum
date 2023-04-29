@@ -5,22 +5,19 @@ import (
 	"encoding/json"
 
 	"github.com/schollz/progressbar/v3"
+	retriever "github.com/scottraio/plum/retrievers"
 	store "github.com/scottraio/plum/vectorstores"
 )
 
 type Model struct {
-	Name        string
-	Attributes  map[string]string
 	VectorStore store.VectorStore
 
-	Train  func(ctx context.Context) []string
-	Return func(qb *QueryBuilder) string
-}
+	Name       string            `json:"Name"`
+	Attributes map[string]string `json:"Attributes"`
 
-type QueryBuilder struct {
-	Query   string
-	Filters map[string]string
-	Options map[string]interface{}
+	HowTo  string
+	Train  func(ctx context.Context) []store.Vector
+	Return func(qb retriever.QueryBuilder) string
 }
 
 func (m *Model) SetAttributes(filters map[string]string) map[string]string {
@@ -35,8 +32,9 @@ func (m *Model) SetAttributes(filters map[string]string) map[string]string {
 	return attrs
 }
 
+// GetAttributes returns the attributes for the model
 func (m *Model) GetAttributes() map[string]string {
-	attrs := make(map[string]string)
+	attrs := make(map[string]string, len(m.Attributes)+1)
 
 	for key, value := range m.Attributes {
 		attrs[key] = value
@@ -46,6 +44,7 @@ func (m *Model) GetAttributes() map[string]string {
 	return attrs
 }
 
+// SetAttribute sets an attribute for the model
 func (m *Model) SetAttribute(key string, value string) error {
 	m.Attributes[key] = value
 	return nil
@@ -54,13 +53,17 @@ func (m *Model) SetAttribute(key string, value string) error {
 func (m *Model) TrainModel(attrs map[string]string) error {
 	var err error
 	ctx := context.Background()
-	docs := m.Train(ctx)
+	vectors := m.Train(ctx)
 
 	// Create a new progress bar with the total number of documents
-	bar := progressbar.Default(int64(len(docs)))
+	bar := progressbar.Default(int64(len(vectors)))
 
-	for _, doc := range docs {
-		err = m.VectorStore.Upsert(doc, m.SetAttributes(attrs))
+	// Iterate over the documents and insert them into the vector store
+	for _, vector := range vectors {
+		for k, v := range vector.MetaData {
+			attrs[k] = v
+		}
+		err = m.VectorStore.Upsert(vector.Text, attrs)
 
 		// Increment the progress bar after each iteration
 		bar.Add(1)
@@ -69,8 +72,9 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 	return err
 }
 
-func (m *Model) QueryBuilder(jsonString string) QueryBuilder {
-	qb := QueryBuilder{}
+// QueryBuilder returns a QueryBuilder struct from a JSON string
+func (m *Model) QueryBuilder(jsonString string) retriever.QueryBuilder {
+	var qb retriever.QueryBuilder
 	json.Unmarshal([]byte(jsonString), &qb)
 	return qb
 }

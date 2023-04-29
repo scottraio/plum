@@ -1,35 +1,34 @@
 package plum
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
-	"text/template"
 
+	llm "github.com/scottraio/plum/llms"
 	llms "github.com/scottraio/plum/llms"
-	"github.com/scottraio/plum/models"
+	retriever "github.com/scottraio/plum/retrievers"
 )
 
 const DECISION_PROMPT = `
+You are a JSON api that sdetermines what action, actions or no action, to take based on the question and tools.
+
 Instructions:
-1. You are a JSON api that determines what action, actions or no action, to take based on the question and tools.
+-------------
+1. You will create a plan of action by thinking about what actions do i need to take to answer the question. 
 
-2. Each action can only be one of the following tools: 
-{{.GetToolsAsText}} 
+2. Each action queries a model at a time, you can use the same tool twice.
 
-3. You will create a plan of action by thinking about what actions do i need to take to answer the question. 
+3. Each action can only be one of the following tools: 
+{{.GetToolsTextForPrompt}} 
 
-5. You remember the following: 
+4. You remember the following: 
 {{.PromptMemory}}
-
-6. You hold the following truths:
-{{.Truths}}
 
 
 Respond with the following JSON format:
-
+---------------------------------------
 {
 	"Question": "{{.Input}}",
 	"Thought": "think about what actions and inputs do i need to take to answer the question?",
@@ -37,7 +36,13 @@ Respond with the following JSON format:
 		{
 			"Tool": "the tool to use",
 			"Reasoning": "the reasoning for using the tool",
-			"Input": "{"query": "the query", "filter": {"key": "value as string"}, "options": {"key": "value as any type"}}"
+			"Input": {
+				"Query": "keywords that describe the question", 
+				// omit if empty
+				"Filters": { "meta_key": "value for meta key" }, 
+				// omit if empty
+				"Options": { "topK": "value as int" }
+			}
 		}
 	]	
 }
@@ -57,7 +62,6 @@ type Agent struct {
 	PromptMemory   string
 	Tools          []Tool
 	ToolNames      []string
-	Truths         string
 	App            AppConfig
 }
 
@@ -68,20 +72,19 @@ type Decision struct {
 	Actions  []Action `json:"Actions"`
 }
 type Action struct {
-	Tool      string `json:"Tool"`
-	ToolInput string `json:"Input"`
-	Reasoning string `json:"Reasoning"`
+	Tool      string                 `json:"Tool"`
+	ToolInput retriever.QueryBuilder `json:"Input"`
+	Reasoning string                 `json:"Reasoning"`
 }
 
 // NewAgent creates a new agent with the given input, prompt, memory, and tools.
-func NewAgent(prompt string, tools []Tool, truths string) *Agent {
+func NewAgent(prompt string, tools []Tool) *Agent {
 	agent := &Agent{
 		App:            GetApp(),
 		Input:          "",
 		DecisionPrompt: DECISION_PROMPT,
 		Prompt:         prompt,
 		Memory:         &Memory{},
-		Truths:         truths,
 		Tools:          tools}
 	return agent
 }
@@ -137,7 +140,8 @@ func (a *Agent) RunActions() []string {
 	for _, action := range a.Decision.Actions {
 		a.App.Log("Tool", action.Tool, "gray")
 		a.App.Log("Tool Reasoning", action.Reasoning, "gray")
-		a.App.Log("Tool Input", action.ToolInput, "gray")
+
+		a.App.Log("Tool Input", action.ToolInput.ToString(), "gray")
 
 		// Start a new goroutine for each action
 		go func(action Action) {
@@ -159,9 +163,7 @@ func (a *Agent) RunAction(act Action) string {
 
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
-			var queryBuilder models.QueryBuilder
-			json.Unmarshal([]byte(act.ToolInput), &queryBuilder)
-			actionResult = tool.Func(&queryBuilder)
+			actionResult = tool.Func(act.ToolInput)
 			a.App.Log("Tool Output", actionResult, "white")
 			break
 		}
@@ -184,12 +186,11 @@ func (a *Agent) GetToolNamesAsJSON() string {
 }
 
 // GetToolNamesAsJSON returns the agent's tool names as a JSON string.
-func (a *Agent) GetToolsAsText() string {
+func (a *Agent) GetToolsTextForPrompt() string {
 	prompt := ""
 	for _, tool := range a.Tools {
-		prompt += tool.Name + "\n" + tool.Description + "\n"
+		prompt += tool.Prompt()
 	}
-
 	return prompt
 }
 
@@ -203,20 +204,6 @@ func (a *Agent) InjectInputsToDecisionPrompt(input string, memory *Memory) *Agen
 		a.ToolNames = append(a.ToolNames, tool.Name+" ("+tool.Description+")")
 	}
 
-	a.DecisionPrompt = a.injectInputsToPrompt(a.DecisionPrompt)
+	a.DecisionPrompt = llm.InjectObjectToPrompt(a, a.DecisionPrompt)
 	return a
-}
-
-// InjectInputsToPrompt injects the agent's input and memory into the prompt.
-func (a *Agent) injectInputsToPrompt(prompt string) string {
-	tmpl, err := template.New("").Parse(prompt)
-	if err != nil {
-		return ""
-	}
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, a); err != nil {
-		return ""
-	}
-
-	return buf.String()
 }
