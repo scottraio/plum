@@ -1,6 +1,6 @@
 # Plum
 Plum is a framework for rapidly building LLM-based applications. 
-Inspired by Langchain.
+Inspired by [Langchain](https://github.com/hwchase17/langchain).
 
 ## Features
 1. Side load data into a LLMs (ChatGPT) to have a conversation with your data. 
