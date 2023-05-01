@@ -1,4 +1,4 @@
-# The Plum Framework
+# Plum
 
 Plum is a framework for rapidly building LLM-based applications. 
 
@@ -8,21 +8,27 @@ Plum is a framework for rapidly building LLM-based applications.
 3. Powerful CLI for querying agents or training models
 4. Written in go. 
 
+## Get Plum
+
+```
+go get github.com/scottraio/plum
+```
+
 ## Anatomy of a Plum Application
 
 ```
-	/
-	 agents/
-	 	 - my_agent.go
-	 models/
-	   - recipe.go
-	 skills/
-		 - epicurious.go
-	 services/
-	 	 - mysql.go
-	 boot.go
-	 main.go
-	 server.go
+/
+	agents/
+		- my_agent.go
+	models/
+		- recipe.go
+	skills/
+		- epicurious.go
+	services/
+		- mysql.go
+	boot.go
+	main.go
+	server.go
 ```
 
 ### Plum Agents
