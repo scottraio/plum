@@ -8,6 +8,12 @@ Inspired by [Langchain](https://github.com/hwchase17/langchain).
 3. Powerful CLI for querying agents or training models
 4. Written in go. 
 
+## Use Cases
+1. Customer service chat bots
+2. Respond to emails
+3. Summarization of team meeting notes
+4. Next-gen AI applications
+
 ## Get Plum
 ```
 go get github.com/scottraio/plum
@@ -22,15 +28,14 @@ go get github.com/scottraio/plum
 * Skills do a wide variety of things, like fetch google results, execute scripts, or send emails.
 
 ```
-[input] => [Plum AI] => [output]
-               |
-               |
-               |
-               - Search your own documents with powerful vector search
-               - Call REST API Endpoints
-               - Get latest news articles
-               - Execute Scripts
-               - Send Emails		
+[input] => [Plum AI App] => [output]
+                 |
+                 |
+                 |
+                 - Search your own documents with powerful vector search
+                 - Call REST API Endpoints
+                 - Get latest news articles
+                 - Execute Scripts
 ```
 
 
