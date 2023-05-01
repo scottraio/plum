@@ -1,6 +1,6 @@
 # Plum
-
 Plum is a framework for rapidly building LLM-based applications. 
+Inspired by Langchain.
 
 ## Features
 1. Side load data into a LLMs (ChatGPT) to have a conversation with your data. 
@@ -9,13 +9,11 @@ Plum is a framework for rapidly building LLM-based applications.
 4. Written in go. 
 
 ## Get Plum
-
 ```
 go get github.com/scottraio/plum
 ```
 
 ## Anatomy of a Plum Application
-
 ```
 /
 agents/
