@@ -19,13 +19,13 @@ go get github.com/scottraio/plum
 ```
 /
 agents/
-	- my_agent.go
+  - my_agent.go
 models/
-	- recipe.go
+  - recipe.go
 skills/
-	- epicurious.go
+  - epicurious.go
 services/
-	- mysql.go
+  - mysql.go
 boot.go
 main.go
 server.go
