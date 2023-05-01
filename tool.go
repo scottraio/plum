@@ -2,21 +2,20 @@ package plum
 
 import (
 	llm "github.com/scottraio/plum/llms"
-	retriever "github.com/scottraio/plum/retrievers"
 )
 
 type Tool struct {
 	Name        string
 	Description string
 	HowTo       string
-	Func        func(query retriever.QueryBuilder) string
+	Func        func(query string) string
 }
 
 func (t *Tool) Prompt() string {
 	template := `
 		
 		Name: {{.Name}} 
-		Reasoning: {{.Description}}
+		Description: {{.Description}}
 			
 		How to use: 
 		{{.HowTo}}

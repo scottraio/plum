@@ -2,6 +2,7 @@ package llms
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 )
 
@@ -21,5 +22,15 @@ func InjectObjectToPrompt(obj interface{}, prompt string) string {
 		return ""
 	}
 
-	return buf.String()
+	raw := buf.String()
+	var cleaned strings.Builder
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		cleaned.WriteString(trimmed)
+		cleaned.WriteString("\n")
+
+	}
+
+	return cleaned.String()
 }

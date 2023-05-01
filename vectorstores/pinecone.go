@@ -109,7 +109,7 @@ func (p *Pinecone) Query(input string, fields map[string]string, options map[str
 		Queries: []*pinecone_grpc.QueryVector{
 			{Values: embeddings},
 		},
-		TopK:            20,
+		TopK:            opts["TopK"].(uint32),
 		IncludeValues:   false,
 		IncludeMetadata: true,
 		Namespace:       opts["Namespace"].(string),
@@ -148,18 +148,21 @@ func (p *Pinecone) queryOptions(options map[string]interface{}) map[string]inter
 }
 
 // Upsert upserts a document into the Pinecone index.
-func (p *Pinecone) Upsert(text string, fields map[string]string) error {
+func (p *Pinecone) Upsert(text string, fields map[string]string, options map[string]interface{}) error {
 	var vects []*pinecone_grpc.Vector
 	var meta structpb.Struct
 
-	// get the embeddings
-	embeddings := p.EmbedFunc(text)
-
+	// Set Fields and Options
 	fields["text"] = text
 
 	meta = structpb.Struct{
 		Fields: p.WithFields(fields),
 	}
+
+	opts := p.queryOptions(options)
+
+	// get the embeddings
+	embeddings := p.EmbedFunc(text)
 
 	vects = append(vects, &pinecone_grpc.Vector{
 		Id:       uuid.New().String(),
@@ -169,7 +172,7 @@ func (p *Pinecone) Upsert(text string, fields map[string]string) error {
 
 	_, upsertErr := p._Client.Upsert(p._Context, &pinecone_grpc.UpsertRequest{
 		Vectors:   vects,
-		Namespace: p.Namespace,
+		Namespace: opts["Namespace"].(string),
 	})
 
 	// return the first result

@@ -8,61 +8,58 @@ import (
 
 	llm "github.com/scottraio/plum/llms"
 	llms "github.com/scottraio/plum/llms"
-	retriever "github.com/scottraio/plum/retrievers"
 )
 
 const DECISION_PROMPT = `
-You are a JSON api that sdetermines what action, actions or no action, to take based on the question and tools.
+Background
+----------
+A Plum Agent is a powerful language model that can assist with a wide range of tasks, including 
+answering questions and providing in-depth explanations and discussions on various topics. It can 
+process and understand large amounts of text, generate human-like responses, and provide valuable insights 
+and information. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
+received from the user. A Plum Agent understands csv, markdown, json, html and plain text.
 
-Instructions:
--------------
-1. You will create a plan of action by thinking about what actions do i need to take to answer the question. 
+{{.DecisionContext}}
 
-2. Each action queries a model at a time, you can use the same tool twice.
+Instructions
+------------
+To answer the question, you need to create a plan of action by considering which tools to use. 
+Then, you will use the selected tools to take the required actions. 
 
-3. Each action can only be one of the following tools: 
-{{.GetToolsTextForPrompt}} 
+Please choose one or more tools from the following list to take action:
+{{.GetToolsTextForPrompt}}
 
-4. You remember the following: 
+You may use the following information to answer the question:
 {{.PromptMemory}}
 
-
-Respond with the following JSON format:
----------------------------------------
+Respond in the following JSON format:
+-------------------------------------
 {
 	"Question": "{{.Input}}",
-	"Thought": "think about what actions and inputs do i need to take to answer the question?",
-	"Actions": [
-		{
-			"Tool": "the tool to use",
-			"Reasoning": "the reasoning for using the tool",
-			"Input": {
-				"Query": "keywords that describe the question", 
-				// omit if empty
-				"Filters": { "meta_key": "value for meta key" }, 
-				// omit if empty
-				"Options": { "topK": "value as int" }
-			}
-		}
-	]	
+	"Thought": "Think about what action and input are required to answer the question.",
+	"Actions": [{
+		"Tool": "the tool name to use",
+		"Input": "the input to the tool",
+	}]
 }
 
-
-Begin!
+Let's get started!
 `
 
 // Agent represents an AI agent with decision-making capabilities.
 type Agent struct {
-	Input          string
-	VectorInput    []float32
-	Prompt         string
-	DecisionPrompt string
-	Decision       Decision
-	Memory         *Memory
-	PromptMemory   string
-	Tools          []Tool
-	ToolNames      []string
-	App            AppConfig
+	Input           string
+	VectorInput     []float32
+	Prompt          string
+	DecisionPrompt  string
+	DecisionContext string
+	SummaryContext  string
+	Decision        Decision
+	Memory          *Memory
+	PromptMemory    string
+	Tools           []Tool
+	ToolNames       []string
+	App             AppConfig
 }
 
 // Decision represents a structured decision made by the agent.
@@ -72,37 +69,39 @@ type Decision struct {
 	Actions  []Action `json:"Actions"`
 }
 type Action struct {
-	Tool      string                 `json:"Tool"`
-	ToolInput retriever.QueryBuilder `json:"Input"`
-	Reasoning string                 `json:"Reasoning"`
+	Tool        string `json:"Tool"`
+	ToolInput   string `json:"Input"`
+	Reasoning   string `json:"Reasoning"`
+	Observation string `json:"Observation"`
 }
 
 // NewAgent creates a new agent with the given input, prompt, memory, and tools.
-func NewAgent(prompt string, tools []Tool) *Agent {
+func NewAgent(decision_context string, summary_context string, tools []Tool) *Agent {
 	agent := &Agent{
-		App:            GetApp(),
-		Input:          "",
-		DecisionPrompt: DECISION_PROMPT,
-		Prompt:         prompt,
-		Memory:         &Memory{},
-		Tools:          tools}
+		App:             GetApp(),
+		Input:           "",
+		DecisionPrompt:  DECISION_PROMPT,
+		DecisionContext: decision_context,
+		SummaryContext:  summary_context,
+		Memory:          &Memory{},
+		Tools:           tools}
 	return agent
 }
 
 // Run executes the agent's decision-making process.
 func (a *Agent) Run(input string, memory *Memory) string {
 	a.InjectInputsToDecisionPrompt(input, memory)
-
 	a.Decide(a.App.LLM)
 
 	summary := a.RunActions()
 
 	s := Summary{
-		Question:     a.Input,
-		Summary:      RemoveCommonWords(strings.Join(summary, "\n")),
-		PromptMemory: a.PromptMemory}
+		Question:       a.Input,
+		SummaryContext: a.SummaryContext,
+		Summary:        RemoveCommonWords(strings.Join(summary, "\n")),
+		PromptMemory:   a.PromptMemory}
 
-	answer := s.Summarize(a.Prompt)
+	answer := s.Summarize()
 
 	a.App.Log("Answer", answer, "green")
 	return answer
@@ -139,9 +138,7 @@ func (a *Agent) RunActions() []string {
 
 	for _, action := range a.Decision.Actions {
 		a.App.Log("Tool", action.Tool, "gray")
-		a.App.Log("Tool Reasoning", action.Reasoning, "gray")
-
-		a.App.Log("Tool Input", action.ToolInput.ToString(), "gray")
+		a.App.Log("Tool Input", action.ToolInput, "gray")
 
 		// Start a new goroutine for each action
 		go func(action Action) {

@@ -11,7 +11,8 @@ import (
 const (
 	CmdForget = "/forget"
 	CmdTrain  = "/train"
-	CmdSwitch = "/switch agent"
+	CmdAgent  = "/agent"
+	CmdModel  = "/model"
 	CmdPurge  = "/purge"
 	CmdMemory = "/memory"
 )
@@ -50,15 +51,10 @@ func Cli(config CliConfig) {
 
 func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
 	var currentAgent string
-	var agent Agent
+	var currentModel string
+	var currentContext string
 
 	for {
-		if currentAgent == "" {
-			currentAgent = chooseAgent(msgChan)
-			fmt.Println("You are now chatting with", currentAgent)
-			fmt.Print("> ")
-		}
-
 		input := <-msgChan
 
 		if strings.HasPrefix(input, CmdForget) {
@@ -75,10 +71,14 @@ func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config Cl
 				ModelAttributes: config.ModelAttributes,
 			}
 
-			config.Train(trainConfig)
+			if currentContext == "model" {
+				trainConfig.Train(currentModel)
+			} else {
+				trainConfig.TrainAll()
+			}
 
 			// clear screen
-			fmt.Print("> ")
+			cursor(currentContext, currentAgent, currentModel)
 			continue
 
 		} else if strings.HasPrefix(input, CmdPurge) {
@@ -86,7 +86,7 @@ func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config Cl
 			config.Purge()
 
 			// clear screen
-			fmt.Print("> ")
+			cursor(currentContext, currentAgent, currentModel)
 			continue
 
 		} else if strings.HasPrefix(input, CmdMemory) {
@@ -94,25 +94,49 @@ func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config Cl
 			fmt.Println("%v", memory)
 
 			// clear screen
-			fmt.Print("> ")
+			cursor(currentContext, currentAgent, currentModel)
 			continue
 
-		} else if strings.HasPrefix(input, CmdSwitch) {
+		} else if strings.HasPrefix(input, CmdAgent) {
 			// reset current agent
-			currentAgent = ""
+			agent := chooseAgent(msgChan)
+			currentAgent = agent
+			currentContext = "agent"
 
 			// clear screen
 			fmt.Println("Agent switched. Choose a new Agent to chat with:")
-			fmt.Print("> ")
+			cursor(currentContext, currentAgent, currentModel)
+			continue
+		} else if strings.HasPrefix(input, CmdModel) {
+			// reset current agent
+			model := chooseModel(msgChan)
+			currentModel = model
+			currentContext = "model"
+
+			// clear screen
+			fmt.Println("Model switched. Choose a new Model to query:")
+			cursor(currentContext, currentAgent, currentModel)
 			continue
 		}
 
-		agent = App.Agents[currentAgent]
-		answer := agent.Run(input, memory)
-		history := ChatHistory{Query: input, Answer: answer}
-		memory.History = append(memory.History, history)
+		if currentContext == "agent" {
+			agent := App.Agents[currentAgent]
+			answer := agent.Run(input, memory)
+			history := ChatHistory{Query: input, Answer: answer}
+			memory.History = append(memory.History, history)
 
-		fmt.Print("> ")
+			fmt.Printf("[%s] > ", currentAgent)
+		} else if currentContext == "model" {
+
+			model := App.Models[currentModel]
+			answer := model.Find(input, map[string]string{}, map[string]interface{}{})
+			App.Log("[Answer]", answer, "gray")
+
+			cursor(currentContext, currentAgent, currentModel)
+		} else {
+			cursor(currentContext, currentAgent, currentModel)
+		}
+
 	}
 }
 
@@ -143,5 +167,45 @@ func chooseAgent(msgChan <-chan string) string {
 		}
 
 		return agents[index-1]
+	}
+}
+
+func chooseModel(msgChan <-chan string) string {
+	// Create a list of available Models
+	var models []string
+	for name := range App.Models {
+		models = append(models, name)
+	}
+
+	// Print the list of available Models
+	fmt.Println("Available Models:")
+	for i, name := range models {
+		fmt.Printf("\t%d. %s\n", i+1, name)
+	}
+
+	// Prompt the user to choose a Model
+	for {
+		fmt.Print("Choose a Model to use (enter a number): ")
+
+		input := <-msgChan
+
+		// Parse the user input as an integer
+		index, err := strconv.Atoi(input)
+		if err != nil || index < 1 || index > len(models) {
+			fmt.Println("Invalid input. Please choose an available Model.")
+			continue
+		}
+
+		return models[index-1]
+	}
+}
+
+func cursor(context string, agent string, model string) {
+	if context == "agent" {
+		fmt.Printf("[%s] > ", agent)
+	} else if context == "model" {
+		fmt.Printf("[%s] > ", model)
+	} else {
+		fmt.Print("> ")
 	}
 }

@@ -5,7 +5,6 @@ import (
 
 	plum "github.com/scottraio/plum"
 	models "github.com/scottraio/plum/models"
-	retriever "github.com/scottraio/plum/retrievers"
 	store "github.com/scottraio/plum/vectorstores"
 	"google.golang.org/genproto/googleapis/type/datetime"
 )
@@ -42,7 +41,7 @@ func Knowledge() *models.Model {
 
 			// Return is a function that returns the result that you want to use in your prompt
 			// How the result is used is up to you
-			Return: func(queryBuilder retriever.QueryBuilder) string {
+			Return: func(queryBuilder string) string {
 				return knowledge.Return(queryBuilder)
 			},
 		},
@@ -61,11 +60,12 @@ func (c *KnowledgeModel) Train(ctx context.Context) []store.Vector {
 }
 
 // Return gets the result from the vector store
-func (c *KnowledgeModel) Return(queryBuilder retriever.QueryBuilder) string {
-	query := c.Model.VectorStore.Query(
-		queryBuilder.Query,
-		c.Model.SetAttributes(queryBuilder.Filters),
-		queryBuilder.Options,
+func (c *KnowledgeModel) Return(query string) string {
+	return c.Model.VectorStore.Query(
+		query,
+		c.Model.SetAttributes(map[string]string{}),
+		map[string]interface{}{
+			"TopK": 2,
+		},
 	)
-	return query
 }

@@ -3,6 +3,7 @@ package plum
 import (
 	llms "github.com/scottraio/plum/llms"
 	models "github.com/scottraio/plum/models"
+	skills "github.com/scottraio/plum/skills"
 	store "github.com/scottraio/plum/vectorstores"
 )
 
@@ -17,6 +18,7 @@ type AppConfig struct {
 	LLM               llms.LLM
 	Embedding         func(input string) []float32
 	Models            map[string]*models.Model
+	Skills            map[string]*skills.Skill
 	Agents            map[string]Agent
 	Env               string
 }
@@ -36,6 +38,7 @@ func Boot(init Initialize) AppConfig {
 		LLM:         InitLLM(init),
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]*models.Model),
+		Skills:      make(map[string]*skills.Skill),
 		Agents:      make(map[string]Agent),
 	}
 
@@ -51,6 +54,12 @@ func GetApp() AppConfig {
 func (a *AppConfig) RegisterModel(name string, m *models.Model) {
 	a.Log("Model", "Model "+name+" Registered ", "purple")
 	a.Models[name] = m
+}
+
+// Register Skills
+func (a *AppConfig) RegisterSkill(name string, skill *skills.Skill) {
+	a.Log("Skill", "Skill "+name+" Registered ", "purple")
+	a.Skills[name] = skill
 }
 
 // Register Agents

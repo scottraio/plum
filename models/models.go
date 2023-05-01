@@ -2,10 +2,9 @@ package models
 
 import (
 	"context"
-	"encoding/json"
+	"strings"
 
 	"github.com/schollz/progressbar/v3"
-	retriever "github.com/scottraio/plum/retrievers"
 	store "github.com/scottraio/plum/vectorstores"
 )
 
@@ -17,7 +16,7 @@ type Model struct {
 
 	HowTo  string
 	Train  func(ctx context.Context) []store.Vector
-	Return func(qb retriever.QueryBuilder) string
+	Return func(query string) string
 }
 
 func (m *Model) SetAttributes(filters map[string]string) map[string]string {
@@ -63,7 +62,10 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 		for k, v := range vector.MetaData {
 			attrs[k] = v
 		}
-		err = m.VectorStore.Upsert(vector.Text, attrs)
+
+		err = m.VectorStore.Upsert(vector.Text, attrs, map[string]interface{}{
+			"Namespace": strings.ToLower(m.Name),
+		})
 
 		// Increment the progress bar after each iteration
 		bar.Add(1)
@@ -72,9 +74,19 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 	return err
 }
 
-// QueryBuilder returns a QueryBuilder struct from a JSON string
-func (m *Model) QueryBuilder(jsonString string) retriever.QueryBuilder {
-	var qb retriever.QueryBuilder
-	json.Unmarshal([]byte(jsonString), &qb)
-	return qb
+func (m *Model) Find(query string, filters map[string]string, opts map[string]interface{}) string {
+	opts["Namespace"] = strings.ToLower(m.Name)
+
+	return m.VectorStore.Query(query, filters, opts)
+}
+
+func (m *Model) Describe(query string, result string) string {
+	return `
+		Model Name: ` + m.Name + `
+		Model Context: ` + m.HowTo + `
+
+		Model Query (generated from Question): ` + query + `
+		Model Summary: ` + result + `
+		------------------------------------------------------------
+	`
 }
