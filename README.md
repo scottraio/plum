@@ -18,17 +18,17 @@ go get github.com/scottraio/plum
 
 ```
 /
-	agents/
-		- my_agent.go
-	models/
-		- recipe.go
-	skills/
-		- epicurious.go
-	services/
-		- mysql.go
-	boot.go
-	main.go
-	server.go
+agents/
+	- my_agent.go
+models/
+	- recipe.go
+skills/
+	- epicurious.go
+services/
+	- mysql.go
+boot.go
+main.go
+server.go
 ```
 
 ### Plum Agents
