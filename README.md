@@ -14,10 +14,30 @@ Inspired by [Langchain](https://github.com/hwchase17/langchain).
 3. Summarization of team meeting notes
 4. Next-gen AI applications
 
-## Get Plum
+## Getting Started
+
+### Prerequisites
+Currently, Plum supports OpenAI (Embeddings and LLM) and Pinecone (Vector Store) only. 
+
+#### OpenAI
+1. Obtain an OpenAI API key
+2. Set the OPENAI_API_KEY environment variable (.env is supported)
+
+#### Pinecone
+1. Signup for Pinecone and create an index.
+2. Get the API key and set the PINECONE_API_KEY environment variable (.env is supported)
+3. Set the PINECONE_ENV environment variable (.env is supported)
+4. Set the PINECONE_PROJECT_ID environment variable (.env is supported)
+
+Find your pod's url. [index]-[product_id].svc.[env].pinecone.io
+
+#### Get Plum
 ```
 go get github.com/scottraio/plum
+
 ```
+
+- [ ] TODO: `plum new [insert app name]`
 
 ## Anatomy of a Plum Application
 * Agents have many tools. 
@@ -97,8 +117,9 @@ Tool{
 ```
 
 ### Plum Models
-A plum model represents the "database" of a Plum application. 
-It is a collection of data, that's been vectorized with an embedding func, that can be queried by plum tools. 
+Plum models represent the "database" of a Plum application. 
+They take source data, vectorize it, and store it in a vector store.
+Once trained, they can be queried to return results.
 
 ```go
 Model{
@@ -130,9 +151,8 @@ Model{
 ```
 
 ### Plum Skills
-
-A Plum Skill represents any action or task not found in the vector store. This could be a google search, 
-REST API call, executing a script, or sending an email. 
+Plum Skills are the opposite of a model. They perform an action in real time.
+This can be performing a google search, executing a script, or calling a REST API endpoint.
 
 ```go
 Skill{
@@ -146,3 +166,10 @@ Skill{
 	},
 }
 ```
+
+## Roadmap
+1. [ ] Add more Embedding Options e.g. [wego](https://github.com/ynqa/wego)
+2. [ ] Continuous Mode (allow agents to call other agents)
+3. [ ] Add more LLM options
+4. [ ] Add more vector store options 
+5. [ ] Add more vector store options
