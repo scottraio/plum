@@ -24,13 +24,13 @@ go get github.com/scottraio/plum
 ```
 [input] => [Plum AI] => [output]
                |
-							 |
-							 |
-		           - Search your own documents with powerful vector search
-							 - Call REST API Endpoints
-				       - Get latest news articles
-				       - Execute Scripts
-				       - Send Emails		
+               |
+               |
+               - Search your own documents with powerful vector search
+               - Call REST API Endpoints
+               - Get latest news articles
+               - Execute Scripts
+               - Send Emails		
 ```
 
 
