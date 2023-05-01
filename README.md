@@ -14,6 +14,27 @@ go get github.com/scottraio/plum
 ```
 
 ## Anatomy of a Plum Application
+* Agents have many tools. 
+* Tools use one or more Model or Skill. 
+* Models do two things:
+  * Take source data, transform text into vectors and store the data in a vector store (training). 
+  * Models also retrieve data from the vector store.
+* Skills do a wide variety of things, like fetch google results, execute scripts, or send emails.
+
+```
+[input] => [Plum AI] => [output]
+               |
+							 |
+							 |
+		           - Search your own documents with powerful vector search
+							 - Call REST API Endpoints
+				       - Get latest news articles
+				       - Execute Scripts
+				       - Send Emails		
+```
+
+
+### Plum Application Structure
 ```
 /
 agents/
