@@ -64,7 +64,7 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 		}
 
 		err = m.VectorStore.Upsert(vector.Text, attrs, map[string]interface{}{
-			"Namespace": strings.ToLower(m.Name),
+			"Namespace": m.Namespace(),
 		})
 
 		// Increment the progress bar after each iteration
@@ -74,8 +74,12 @@ func (m *Model) TrainModel(attrs map[string]string) error {
 	return err
 }
 
+func (m *Model) Purge() error {
+	return m.VectorStore.Purge(m.Namespace())
+}
+
 func (m *Model) Find(query string, filters map[string]string, opts map[string]interface{}) string {
-	opts["Namespace"] = strings.ToLower(m.Name)
+	opts["Namespace"] = m.Namespace()
 
 	return m.VectorStore.Query(query, filters, opts)
 }
@@ -89,4 +93,8 @@ func (m *Model) Describe(query string, result string) string {
 		Model Summary: ` + result + `
 		------------------------------------------------------------
 	`
+}
+
+func (m *Model) Namespace() string {
+	return strings.ToLower(m.Name)
 }

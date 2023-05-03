@@ -1,4 +1,4 @@
-package plum
+package memory
 
 import "fmt"
 
@@ -11,10 +11,16 @@ type ChatHistory struct {
 	Answer string `json:"answer"`
 }
 
-func LoadMemory(memory ChatHistory) Memory {
-	m := Memory{}
-	m.History = append(m.History, memory)
+func LoadMemory(history []ChatHistory) *Memory {
+	m := &Memory{}
+	for _, chatHistory := range history {
+		m.History = append(m.History, chatHistory)
+	}
 	return m
+}
+
+func (c *ChatHistory) Memory() *Memory {
+	return LoadMemory([]ChatHistory{*c})
 }
 
 func (m *Memory) Format() string {

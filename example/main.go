@@ -1,8 +1,11 @@
 package example
 
 import (
+	exampleAgents "github.com/scottraio/plum/example/agents"
+	"github.com/scottraio/plum/memory"
+
 	plum "github.com/scottraio/plum"
-	agents "github.com/scottraio/plum/example/agents"
+
 	models "github.com/scottraio/plum/example/models"
 )
 
@@ -16,16 +19,24 @@ func main() {
 			Indexes: []string{"knowledge", "structured"}},
 	})
 
-	// chat history is a slice of ChatHistory structs. Handled by the client.
-	chatHistory := plum.LoadMemory(plum.ChatHistory{
-		Query:  "I need help with my [Product Name]",
-		Answer: "I'm sorry to hear that. What seems to be the problem?",
-	})
-
 	// Register the models.
 	// TODO: Automatically register models.
-	boot.RegisterModel("knowledge", models.Knowledge())
+	boot.RegisterModel("knowledge", models.Manual())
+
+	// Register the agents.
+	// TODO: Automatically register agents.
+	boot.RegisterAgent("customer_service", exampleAgents.CustomerServiceAgent())
+
+	history := []memory.ChatHistory{
+		{
+			Query:  "I need help with my [Product Name]",
+			Answer: "I'm sorry to hear that. What seems to be the problem?",
+		},
+	}
+
+	memory := memory.LoadMemory(history)
 
 	// Call the agent with the input and chat history.
-	agents.CustomerServiceAgent("I need help with my [Product Name]", chatHistory)
+	agent := plum.App.Agents["customer_service"]
+	agent.Remember(memory).Answer("I need help with my [Product Name]")
 }

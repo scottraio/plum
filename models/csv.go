@@ -72,3 +72,59 @@ func (c *Csv) CSVToMap(reader *csv.Reader) []map[string]string {
 	}
 	return rows
 }
+
+func (c *Csv) CSVMatrixPinnedFeaturesToStrings(csvString string) []string {
+	csvReader := csv.NewReader(strings.NewReader(csvString))
+	csvData, _ := csvReader.ReadAll()
+
+	columns := make([]string, len(csvData[0])-2)
+
+	for i := 1; i < len(csvData[0])-1; i++ {
+		columns[i-1] = csvData[0][i]
+	}
+
+	featureNames := csvData[1:]
+
+	docs := []string{}
+
+	for _, featureValue := range featureNames {
+		for modelIndex, modelName := range columns {
+			doc := ""
+			featureName := featureValue[0]
+			value := featureValue[modelIndex+1]
+			doc = doc + fmt.Sprintf("%s %s: %s ", modelName, featureName, value)
+
+			docs = append(docs, doc)
+		}
+	}
+
+	return docs
+}
+
+func (c *Csv) CSVMatrixPinnedHeadersToStrings(content string) []string {
+	csvReader := csv.NewReader(strings.NewReader(content))
+	csvData, _ := csvReader.ReadAll()
+
+	columnNames := make([]string, len(csvData[0])-2)
+
+	for i := 1; i < len(csvData[0])-1; i++ {
+		columnNames[i-1] = csvData[0][i]
+	}
+
+	featureNames := csvData[1:]
+
+	docs := []string{}
+	for modelIndex, modelName := range columnNames {
+
+		for _, featureValue := range featureNames {
+			var doc string
+			featureName := featureValue[0]
+			value := featureValue[modelIndex+1]
+			doc = fmt.Sprintf("%s - %s: %s \n", modelName, featureName, value)
+			docs = append(docs, doc)
+		}
+
+	}
+
+	return docs
+}

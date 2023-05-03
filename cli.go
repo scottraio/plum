@@ -2,10 +2,15 @@ package plum
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/scottraio/plum/logger"
+	memory "github.com/scottraio/plum/memory"
 )
 
 const (
@@ -15,13 +20,10 @@ const (
 	CmdModel  = "/model"
 	CmdPurge  = "/purge"
 	CmdMemory = "/memory"
+	CmdExit   = "exit"
 )
 
 type CliConfig struct {
-	BeforeTrain     func(config *TrainConfig)
-	Purge           func()
-	ModelAttributes map[string]string
-	Train           func(config *TrainConfig)
 }
 
 func Cli(config CliConfig) {
@@ -30,13 +32,13 @@ func Cli(config CliConfig) {
 	msgChan := make(chan string)
 
 	// Create a new Memory struct
-	memory := &Memory{}
+	mem := &memory.Memory{}
 
 	// Continuously read user input and send it to the chat function
 	reader := bufio.NewReader(os.Stdin)
 
 	// Start the chat function in a new goroutine, passing a pointer to the Memory struct and the msgChan
-	go chat(memory, reader, msgChan, config)
+	go chat(mem, reader, msgChan, config)
 
 	for {
 		msg, err := reader.ReadString('\n')
@@ -49,49 +51,57 @@ func Cli(config CliConfig) {
 	}
 }
 
-func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
+func chat(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
 	var currentAgent string
 	var currentModel string
 	var currentContext string
+
+	ctx := context.Background()
 
 	for {
 		input := <-msgChan
 
 		if strings.HasPrefix(input, CmdForget) {
 			// reset memory
-			memory.History = nil
+			mem.History = nil
 
 			// clear screen
 			fmt.Print("\033[H\033[2J")
 			fmt.Print("> ")
 			continue
 
+		} else if strings.HasPrefix(input, CmdExit) {
+			os.Exit(0)
+
 		} else if strings.HasPrefix(input, CmdTrain) {
-			trainConfig := &TrainConfig{
-				ModelAttributes: config.ModelAttributes,
-			}
-
 			if currentContext == "model" {
-				trainConfig.Train(currentModel)
+				App.Models[currentModel].Train(ctx)
 			} else {
-				trainConfig.TrainAll()
+				for key, model := range App.Models {
+					logger.Log("Training model", key, "orange")
+					model.Train(ctx)
+				}
 			}
-
 			// clear screen
 			cursor(currentContext, currentAgent, currentModel)
 			continue
 
 		} else if strings.HasPrefix(input, CmdPurge) {
-			// purge
-			config.Purge()
-
+			if currentContext == "model" {
+				App.Models[currentModel].Purge()
+			} else {
+				for key, model := range App.Models {
+					logger.Log("Purging model", key, "yellow")
+					model.Purge()
+				}
+			}
 			// clear screen
 			cursor(currentContext, currentAgent, currentModel)
 			continue
 
 		} else if strings.HasPrefix(input, CmdMemory) {
 			// purge
-			fmt.Println("%v", memory)
+			logger.Log("Memory", mem.Format(), "cyan")
 
 			// clear screen
 			cursor(currentContext, currentAgent, currentModel)
@@ -104,7 +114,7 @@ func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config Cl
 			currentContext = "agent"
 
 			// clear screen
-			fmt.Println("Agent switched. Choose a new Agent to chat with:")
+			color.Cyan("\n- Agent switched to " + currentAgent + ".\n\n")
 			cursor(currentContext, currentAgent, currentModel)
 			continue
 		} else if strings.HasPrefix(input, CmdModel) {
@@ -114,23 +124,30 @@ func chat(memory *Memory, reader *bufio.Reader, msgChan <-chan string, config Cl
 			currentContext = "model"
 
 			// clear screen
-			fmt.Println("Model switched. Choose a new Model to query:")
+			color.Yellow("Model switched to " + currentModel + ".\n\n")
 			cursor(currentContext, currentAgent, currentModel)
 			continue
 		}
 
 		if currentContext == "agent" {
+			// Run the agent
 			agent := App.Agents[currentAgent]
-			answer := agent.Run(input, memory)
-			history := ChatHistory{Query: input, Answer: answer}
-			memory.History = append(memory.History, history)
 
-			fmt.Printf("[%s] > ", currentAgent)
+			engine := agent.Remember(mem)
+			answer := engine.Answer(input)
+
+			// Append new memory to the conversation
+			history := memory.ChatHistory{Query: input, Answer: answer}
+			mem.History = append(mem.History, history)
+
+			cursor(currentContext, currentAgent, currentModel)
 		} else if currentContext == "model" {
 
 			model := App.Models[currentModel]
-			answer := model.Find(input, map[string]string{}, map[string]interface{}{})
-			App.Log("[Answer]", answer, "gray")
+			answer := model.Find(input, map[string]string{}, map[string]interface{}{
+				"TopK": float64(3),
+			})
+			logger.Log("[Answer]", answer, "gray")
 
 			cursor(currentContext, currentAgent, currentModel)
 		} else {
@@ -148,21 +165,22 @@ func chooseAgent(msgChan <-chan string) string {
 	}
 
 	// Print the list of available Agents
-	fmt.Println("Available Agents:")
+	color.Cyan("\n- Available Agents:")
 	for i, name := range agents {
-		fmt.Printf("\t%d. %s\n", i+1, name)
+		agentText := fmt.Sprintf("\t%d. %s\n", i+1, name)
+		color.Cyan(agentText)
 	}
 
 	// Prompt the user to choose an Agent
 	for {
-		fmt.Print("Choose an Agent to chat with (enter a number): ")
+		fmt.Print(color.CyanString("\n- Choose an Agent to chat with (enter a number): "))
 
 		input := <-msgChan
 
 		// Parse the user input as an integer
 		index, err := strconv.Atoi(input)
 		if err != nil || index < 1 || index > len(agents) {
-			fmt.Println("Invalid input. Please choose an available Agent.")
+			color.Red("- Invalid input. Please choose an available Agent.")
 			continue
 		}
 
@@ -178,21 +196,21 @@ func chooseModel(msgChan <-chan string) string {
 	}
 
 	// Print the list of available Models
-	fmt.Println("Available Models:")
+	color.Yellow("\n- Available Models:")
 	for i, name := range models {
-		fmt.Printf("\t%d. %s\n", i+1, name)
+		color.Yellow(fmt.Sprintf("\t%d. %s\n", i+1, name))
 	}
 
 	// Prompt the user to choose a Model
 	for {
-		fmt.Print("Choose a Model to use (enter a number): ")
+		fmt.Print(color.YellowString("\n- Choose a Model to use (enter a number): "))
 
 		input := <-msgChan
 
 		// Parse the user input as an integer
 		index, err := strconv.Atoi(input)
 		if err != nil || index < 1 || index > len(models) {
-			fmt.Println("Invalid input. Please choose an available Model.")
+			color.Red("Invalid input. Please choose an available Model.")
 			continue
 		}
 
@@ -201,10 +219,14 @@ func chooseModel(msgChan <-chan string) string {
 }
 
 func cursor(context string, agent string, model string) {
+	fmt.Println("")
+
 	if context == "agent" {
-		fmt.Printf("[%s] > ", agent)
+		cur := color.CyanString(fmt.Sprintf("[%s] > ", agent))
+		fmt.Print(cur)
 	} else if context == "model" {
-		fmt.Printf("[%s] > ", model)
+		cur := color.YellowString(fmt.Sprintf("[%s] > ", model))
+		fmt.Print(cur)
 	} else {
 		fmt.Print("> ")
 	}

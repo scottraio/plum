@@ -3,6 +3,7 @@ package plum
 import (
 	embeddings "github.com/scottraio/plum/embeddings"
 	llms "github.com/scottraio/plum/llms"
+	util "github.com/scottraio/plum/util"
 	store "github.com/scottraio/plum/vectorstores"
 )
 
@@ -17,7 +18,7 @@ func InitLLM(init Initialize) llms.LLM {
 
 	switch init.LLM {
 	case "openai":
-		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
+		apiKey := util.GetDotEnvVariable("OPENAI_API_KEY")
 		l = llms.InitOpenAI(apiKey)
 	default:
 		init.LLM = "openai"
@@ -32,7 +33,7 @@ func InitEmbeddings(embed string) func(input string) []float32 {
 
 	switch embed {
 	case "openai":
-		apiKey := GetDotEnvVariable("OPENAI_API_KEY")
+		apiKey := util.GetDotEnvVariable("OPENAI_API_KEY")
 		embed := embeddings.InitOpenAI(apiKey)
 		e = embed.EmbedText
 	default:
@@ -47,10 +48,10 @@ func InitVectorStore(init Initialize) map[string]store.VectorStore {
 
 	switch init.VectorStoreConfig.Db {
 	case "pinecone":
-		apiKey := GetDotEnvVariable("PINECONE_API_KEY")
-		env := GetDotEnvVariable("PINECONE_ENV")
-		projectId := GetDotEnvVariable("PINECONE_PROJECT_ID")
-		plumEnv := GetDotEnvVariable("PLUM_ENV")
+		apiKey := util.GetDotEnvVariable("PINECONE_API_KEY")
+		env := util.GetDotEnvVariable("PINECONE_ENV")
+		projectId := util.GetDotEnvVariable("PINECONE_PROJECT_ID")
+		plumEnv := util.GetDotEnvVariable("PLUM_ENV")
 
 		v = store.InitPinecone(apiKey, env, projectId, init.VectorStoreConfig.Indexes, init.Embedding, plumEnv)
 	default:
@@ -59,4 +60,8 @@ func InitVectorStore(init Initialize) map[string]store.VectorStore {
 	}
 
 	return v
+}
+
+func Load() {
+
 }

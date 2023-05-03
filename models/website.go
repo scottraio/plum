@@ -3,14 +3,25 @@ package models
 import (
 	"encoding/xml"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strings"
+	"time"
 
-	"github.com/PuerkitoBio/goquery"
+	md "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/go-shiori/go-readability"
 )
 
 type Website struct {
 	Sitemap   string
 	PageLinks []string
+}
+
+type Webpage struct {
+	URL         string
+	Body        string
+	Description string
+	Title       string
 }
 
 type Sitemap struct {
@@ -48,23 +59,6 @@ func (w *Website) GetURLsFromSitemap() []string {
 	return w.PageLinks
 }
 
-func (w *Website) FetchAndParseHTML(url string) (*goquery.Document, error) {
-	// Fetch the HTML content for the current URL
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Parse the HTML content using GoQuery
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return doc, nil
-}
-
 func (w *Website) Split(str string, chunkSize int) []string {
 	var chunks []string
 	for i := 0; i < len(str); i += chunkSize {
@@ -75,4 +69,34 @@ func (w *Website) Split(str string, chunkSize int) []string {
 		chunks = append(chunks, str[i:end])
 	}
 	return chunks
+}
+
+func (w *Website) FetchAndParseHTMLIntoMarkdown(url string) Webpage {
+	article, err := readability.FromURL(url, 5*time.Minute)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	converter := md.NewConverter("", true, nil)
+	markdown, err := converter.ConvertString(article.Content)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return Webpage{
+		URL:         url,
+		Body:        markdown,
+		Description: article.Excerpt,
+		Title:       article.Title,
+	}
+}
+
+func (page *Webpage) ToString(chunk string) string {
+	// Extract the text content from the article
+	var sb strings.Builder
+	sb.WriteString("Page Title: " + page.Title + "\n")
+	sb.WriteString("Page URL: " + page.URL + "\n")
+	sb.WriteString("Page Description: " + page.Description + "\n")
+	sb.WriteString("Page Contents: \n" + chunk + "\n")
+	return sb.String()
 }
