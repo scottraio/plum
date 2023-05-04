@@ -18,6 +18,23 @@ Plum is a framework designed for quickly building LLM-based (large language mode
 
 ## Getting Started
 
+### Quick Start
+
+```
+ curl -s https://raw.githubusercontent.com/scottraio/plum/main/install.sh | bash
+
+ plum new my_ai_app
+ 
+ cd my_ai_app/ 
+
+ // To boot the CLI
+ go run . -cli=true
+ 
+ // To boot the API Server
+ go run . 
+
+```
+
 ### Prerequisites
 
 Currently, Plum uses OpenAI and Pinecone. There are plans to add more LLMs and vector databases in the future.

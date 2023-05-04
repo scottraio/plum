@@ -1,0 +1,42 @@
+scaffold/newapp
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Compiled Go binaries
+*.exe
+*.test
+*.prof
+
+# Dependency directories
+vendor/
+*/vendor/
+*/vendor/*
+
+# Generated files
+bin/
+pkg/
+*.out
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+ehthumbs_vista.db
+
+# Log files
+*.log
+log/
+logs/
+
+# App Files
+.env
