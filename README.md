@@ -64,9 +64,9 @@ Plum agents are the entry point for Plum applications, responsible for creating 
 
 ```go
 agent := plum.AsyncAgent(`
-					You are the official [Company Name] customer service assistant. 
-					Help and assist me with troubleshooting, guiding, and answer questions on [Company Name] products only.
-				 `, CustomerServiceTools())
+	You are the official [Company Name] customer service assistant. 
+	Help and assist me with troubleshooting, guiding, and answer questions on [Company Name] products only.
+`, CustomerServiceTools())
 
 agent.Answer("Where's my order?")
 ```
