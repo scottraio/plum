@@ -1,10 +1,10 @@
-package agents
+package zero_shot
 
 import (
 	"bytes"
 	"html/template"
 
-	agents "github.com/scottraio/plum/agents"
+	"github.com/scottraio/plum/agents"
 )
 
 type ZeroShotEngine struct {

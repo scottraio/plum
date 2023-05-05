@@ -6,11 +6,11 @@
 
 
 # Install the Plum framework
-echo "Installing the Plum..."
+echo "Installing Plum..."
 go install github.com/scottraio/plum-scaffold@latest
 
 # Rename the binary to "plum"
 echo "Renaming the binary to 'plum'..."
 mv $GOPATH/bin/plum-scaffold $GOPATH/bin/plum
 
-echo "plum has been successfully installed!"
+echo "Plum has been successfully installed!"

@@ -38,7 +38,7 @@ func Cli(config CliConfig) {
 	reader := bufio.NewReader(os.Stdin)
 
 	// Start the chat function in a new goroutine, passing a pointer to the Memory struct and the msgChan
-	go chat(mem, reader, msgChan, config)
+	go startCli(mem, reader, msgChan, config)
 
 	for {
 		msg, err := reader.ReadString('\n')
@@ -51,7 +51,7 @@ func Cli(config CliConfig) {
 	}
 }
 
-func chat(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
+func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
 	var currentAgent string
 	var currentModel string
 	var currentContext string

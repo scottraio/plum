@@ -8,7 +8,7 @@ import (
 // CustomerServiceAgent represents a customer service agent.
 func CustomerServiceAgent() agents.Engine {
 	// Create the agent.
-	return plum.AsyncAgent(`
+	return plum.ChatAgent(`
 		You are the official [Company Name] customer service assistant. 
 		Help and assist me with troubleshooting, guiding, and answer questions on [Company Name] products only.
 	`, CustomerServiceTools())

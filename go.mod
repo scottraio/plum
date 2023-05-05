@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.4.0
+	github.com/RediSearch/redisearch-go v1.1.1
 	github.com/fatih/color v1.15.0
 	github.com/go-shiori/go-readability v0.0.0-20230421032831-c66949dfc0ad
 	github.com/google/uuid v1.3.0
@@ -21,6 +22,7 @@ require (
 	github.com/go-shiori/dom v0.0.0-20210627111528-4e4722cd0d65 // indirect
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/gomodule/redigo v1.8.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect

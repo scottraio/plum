@@ -11,12 +11,18 @@ type Engine interface {
 }
 
 type Agent struct {
+	Engine
+
 	Input   string
 	Context string
+
+	RunActionsAsync bool // run actions in go routines or not
 
 	LLM    llm.LLM
 	Memory *memory.Memory
 
 	Tools     []Tool
 	ToolNames []string
+
+	Decision Decision
 }

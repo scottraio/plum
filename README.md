@@ -21,17 +21,17 @@ Plum is a framework designed for quickly building LLM-based (large language mode
 ### Quick Start
 
 ```bash
- > curl -s https://raw.githubusercontent.com/scottraio/plum/main/install | bash
+ curl -s https://raw.githubusercontent.com/scottraio/plum/main/install | bash
 
- > plum new my_ai_app
+ plum new my_ai_app
  
- > cd my_ai_app/ 
+ cd my_ai_app/ 
 
  // To boot the CLI
- > go run . -cli=true
+ go run . -cli=true
  
  // To boot the API Server
- > go run . 
+ go run . 
 ```
 
 ### Prerequisites
