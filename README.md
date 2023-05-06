@@ -1,4 +1,6 @@
+<p style="text-align: center;">
 ![image](https://user-images.githubusercontent.com/29908/236608902-6229c98f-2681-4557-a29c-f1cdd7cac581.png)
+</p>
 
 # Plum Framework
 ⚠️ Plum is under active development ⚠️
