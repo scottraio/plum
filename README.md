@@ -1,9 +1,9 @@
 <img src="https://user-images.githubusercontent.com/29908/236608902-6229c98f-2681-4557-a29c-f1cdd7cac581.png" width="100" />
 
-# Plum Framework
+# Plum
 ⚠️ Plum is under active development ⚠️
 
-Plum is a framework designed for quickly building LLM-based (large language model) applications. 
+Plum is a go framework designed for quickly building LLM-based (large language model) applications. 
 
 ## Features
 
