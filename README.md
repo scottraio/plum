@@ -3,7 +3,7 @@
 # Plum
 ⚠️ Plum is under active development ⚠️
 
-Plum is a go framework designed for quickly building LLM-based (large language model) applications. 
+Plum is a go framework designed for rapid LLM-based (large language model) application development. 
 
 ## Features
 
