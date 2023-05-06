@@ -15,16 +15,12 @@ type Tool struct {
 
 func (t *Tool) Prompt() string {
 	template := `
-		
-		Name: {{.Name}} 
-		Description: {{.Description}}
-			
-		How to use: 
-		{{.HowTo}}
-		
-		----------------------------------------------
-
-		`
+		<Tool>
+			<Name>{{.Name}}</Name>
+			<Description>{{.Description}}</Description>
+			<How to use>{{.HowTo}}</How to use>
+		</Tool>
+	`
 
 	return llm.InjectObjectToPrompt(t, template)
 }

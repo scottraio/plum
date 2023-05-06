@@ -13,10 +13,12 @@ type ChatHistory struct {
 
 func LoadMemory(history []ChatHistory) *Memory {
 	m := &Memory{}
-	for _, chatHistory := range history {
-		m.History = append(m.History, chatHistory)
-	}
+	m.History = append(m.History, history...)
 	return m
+}
+
+func (m *Memory) Add(query string, answer string) {
+	m.History = append(m.History, ChatHistory{query, answer})
 }
 
 func (c *ChatHistory) Memory() *Memory {

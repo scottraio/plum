@@ -26,9 +26,11 @@ func Log(label string, message string, colorCode string) {
 		color.Green(output)
 	case "cyan":
 		color.Cyan(output)
+	case "hi-cyan":
+		color.HiCyan(output)
 	case "gray":
 		color.White(output)
-	case "orange":
+	case "yellow":
 		color.Yellow(output)
 	case "red":
 		color.Red(output)

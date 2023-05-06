@@ -16,9 +16,8 @@ type Decision struct {
 }
 
 type Step struct {
-	Description string   `json:"Description"`
-	Actions     []Action `json:"Actions"`
-	Validate    string   `json:"Validate"`
+	Description string `json:"Description"`
+	Validate    string `json:"Validate"`
 }
 
 type Action struct {
@@ -47,20 +46,30 @@ type SummaryPrompt struct {
 
 // Decide makes a decision based on the agent's input and memory.
 func (a *DecisionPrompt) Decide(prompt string, llm llms.LLM) Decision {
-	logger.Log("Agent", "Thinking...", "gray")
+	logger.Log("Agent", "Thinking...", "cyan")
 
 	decision := llm.Run(prompt)
 
 	// Parse the JSON response to get the Decision object
 	err := json.Unmarshal([]byte(decision), &a.Decision)
 	if err != nil {
-		fmt.Println("Error parsing JSON:", err)
+		logger.Log("Error", "There was an error with the response from the LLM, retrying: "+fmt.Sprintf("%v", err)+" original decision: "+decision, "red")
+		a.Decide(prompt, llm)
 	}
 
 	// Verbose logging
-	logger.Log("Question", a.Input, "blue")
-	logger.Log("Thought", a.Decision.Thought, "gray")
+	logger.Log("Question", a.Input, "cyan")
+	logger.Log("Thought", a.Decision.Thought, "cyan")
 
 	// Inject the agent's input and memory into the prompt
 	return a.Decision
+}
+
+// Decide makes a decision based on the agent's input and memory.
+func (a *DecisionPrompt) StepsToString() string {
+	steps := ""
+	for _, step := range a.Decision.Steps {
+		steps += "<Step>" + step.Description + "</Step>\n"
+	}
+	return steps
 }

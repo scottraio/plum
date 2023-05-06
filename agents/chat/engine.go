@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/scottraio/plum/agents"
@@ -25,18 +26,22 @@ process and understand large amounts of text, generate human-like responses, and
 and information. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
 received from the user. A Plum Agent understands csv, markdown, json, html and plain text.
 
+Context
+-------
 {{.Context}}
+
+Tools
+-----
+{{.Tools}}
+
+Memory
+------
+{{.Memory}}
 
 Instructions
 ------------
 To answer the question, you need to create a plan of action by considering which tools to use. 
 Then, you will use the selected tools to take the required actions. 
-
-Please choose one or more tools from the following list to take action:
-{{.Tools}}
-
-You may use the following information to answer the question:
-{{.Memory}}
 
 Respond in the following JSON format:
 -------------------------------------
@@ -58,10 +63,11 @@ Let's get started!
 // Run executes the agent's decision-making process.
 func (a *ChatAgent) Answer(input string) string {
 	a.Input = input
-
 	decision := a.Decide(input, DECISION_PROMPT)
-	outputs := a.RunActions(decision.Actions)
-	answer := a.Summarize(outputs)
+
+	outputs := a.runActions(decision.Actions)
+
+	answer := a.summarize(outputs)
 	logger.Log("Answer", answer, "green")
 	return answer
 }
@@ -70,6 +76,33 @@ func (a *ChatAgent) Answer(input string) string {
 func (a *ChatAgent) Remember(memory *memory.Memory) agents.Engine {
 	a.Agent.Memory = memory
 	return agents.Engine(a)
+}
+
+// RunActions runs the actions in the agent's decision.
+func (a *ChatAgent) runActions(actions []agents.Action) []string {
+	summary := []string{}
+	no_actions := len(actions)
+	logger.Log("Number of actions", strconv.Itoa(no_actions), "gray")
+
+	// Create a channel to receive the summaries from each goroutine
+	ch := make(chan string, no_actions)
+
+	for _, action := range actions {
+		logger.Log("Tool", action.Tool, "gray")
+		logger.Log("Tool Input", action.ToolInput, "gray")
+
+		// Start a new goroutine for each action
+		go func(action agents.Action) {
+			ch <- a.RunAction(action)
+		}(action)
+	}
+
+	// Collect the summaries from each goroutine
+	for i := 0; i < len(actions); i++ {
+		summary = append(summary, <-ch)
+	}
+
+	return summary
 }
 
 // Summary Prompt
@@ -119,7 +152,7 @@ Begin!
 Answer this question: {{.Input}}
 `
 
-func (a *ChatAgent) Summarize(toolOutputs []string) string {
+func (a *ChatAgent) summarize(toolOutputs []string) string {
 	s := agents.SummaryPrompt{
 		Input:   a.Input,
 		Context: a.Agent.Context,
