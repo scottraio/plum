@@ -1,4 +1,4 @@
-<img src="https://user-images.githubusercontent.com/29908/236608902-6229c98f-2681-4557-a29c-f1cdd7cac581.png" width="100" />
+<img src="https://user-images.githubusercontent.com/29908/236608902-6229c98f-2681-4557-a29c-f1cdd7cac581.png" width="150" />
 
 # Plum
 ⚠️ Plum is under active development ⚠️
