@@ -102,14 +102,20 @@ func (a *Agent) RunAction(act Action) string {
 	// TODO: This should be a goroutine
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
-			actionResult = tool.Func(act.ToolInput)
+			input := Input{
+				Text:   act.ToolInput,
+				Agent:  a,
+				Action: act,
+			}
+
+			actionResult = tool.Func(input)
 
 			if actionResult == "" {
 				actionResult = "No output. (Input: " + act.ToolInput + "))"
 			}
 
-			logger.Log("Tool Input", act.ToolInput, "gray")
-			logger.Log("Tool Output", actionResult, "gray")
+			logger.Log("Tool "+act.Tool+" Input", act.ToolInput, "gray")
+			logger.Log("Tool "+act.Tool+" Output", actionResult, "gray")
 			break
 		}
 	}

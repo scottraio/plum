@@ -20,8 +20,8 @@ func AutoTools() []agents.Tool {
 			Name:        "ShellCommand",
 			Description: "Useful for executing shell commands to write software or output code",
 			HowTo:       "",
-			Func: func(input string) string {
-				return plum.App.Skills["shell"].Return(input)
+			Func: func(input agents.Input) string {
+				return plum.App.Skills["shell"].Return(input.Text)
 			},
 		},
 	}

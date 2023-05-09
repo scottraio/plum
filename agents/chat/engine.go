@@ -46,7 +46,7 @@ Then, you will use the selected tools to take the required actions.
 Respond in the following JSON format:
 -------------------------------------
 {
-	"Question": "{{.Question}}",
+	"Question": "{{.Input}}",
 	"Thought": "Think about what action and input are required to answer the question.",
 	"Actions": [{
 		"Tool": "the tool name to use",
@@ -160,6 +160,8 @@ func (a *ChatAgent) summarize(toolOutputs []string) string {
 		Memory:  a.Agent.Memory.Format()}
 
 	prompt := llm.InjectObjectToPrompt(s, SUMMARY_PROMPT)
+	// Log prompt to log file, do not show in stdout
+	logger.PersistLog(prompt)
 
 	return a.LLM.Run(prompt)
 }

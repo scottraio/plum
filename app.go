@@ -1,9 +1,9 @@
 package plum
 
 import (
-	"github.com/scottraio/plum/agents"
+	agents "github.com/scottraio/plum/agents"
 	llms "github.com/scottraio/plum/llms"
-	"github.com/scottraio/plum/logger"
+	logger "github.com/scottraio/plum/logger"
 	models "github.com/scottraio/plum/models"
 	skills "github.com/scottraio/plum/skills"
 	util "github.com/scottraio/plum/util"
@@ -33,9 +33,15 @@ type VectorStoreConfig struct {
 
 // Init initializes the app config.
 func Boot(init Initialize) AppConfig {
+	env := util.GetDotEnvVariable("PLUM_ENV")
+	port := util.GetDotEnvVariable("PORT")
+
+	util.FatalIfEmpty("PLUM_ENV", env)
+	util.FatalIfEmpty("PORT", port)
+
 	App = &AppConfig{
-		Env:         util.GetDotEnvVariable("PLUM_ENV"),
-		Port:        util.GetDotEnvVariable("PORT"),
+		Env:         env,
+		Port:        port,
 		Verbose:     util.GetDotEnvVariable("VERBOSE") == "true",
 		Embedding:   init.Embedding,
 		LLM:         InitLLM(init),

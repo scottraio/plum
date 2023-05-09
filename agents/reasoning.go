@@ -18,6 +18,7 @@ type Decision struct {
 type Step struct {
 	Description string `json:"Description"`
 	Validate    string `json:"Validate"`
+	Actions     []Action
 }
 
 type Action struct {
@@ -48,6 +49,10 @@ type SummaryPrompt struct {
 func (a *DecisionPrompt) Decide(prompt string, llm llms.LLM) Decision {
 	logger.Log("Agent", "Thinking...", "cyan")
 
+	// Log prompt to log file, do not show in stdout
+	logger.PersistLog(prompt)
+
+	// Run the LLM
 	decision := llm.Run(prompt)
 
 	// Parse the JSON response to get the Decision object
@@ -66,9 +71,9 @@ func (a *DecisionPrompt) Decide(prompt string, llm llms.LLM) Decision {
 }
 
 // Decide makes a decision based on the agent's input and memory.
-func (a *DecisionPrompt) StepsToString() string {
+func (a *Decision) StepsToString() string {
 	steps := ""
-	for _, step := range a.Decision.Steps {
+	for _, step := range a.Steps {
 		steps += "<Step>" + step.Description + "</Step>\n"
 	}
 	return steps

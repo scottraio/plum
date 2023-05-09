@@ -34,6 +34,8 @@ func InitEmbeddings(embed string) func(input string) []float32 {
 	switch embed {
 	case "openai":
 		apiKey := util.GetDotEnvVariable("OPENAI_API_KEY")
+		util.FatalIfEmpty("OPENAI_API_KEY", apiKey)
+
 		embed := embeddings.InitOpenAI(apiKey)
 		e = embed.EmbedText
 	default:

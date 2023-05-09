@@ -10,7 +10,7 @@ type Tool struct {
 	Name        string
 	Description string
 	HowTo       string
-	Func        func(query string) string
+	Func        func(input Input) string
 }
 
 func (t *Tool) Prompt() string {
@@ -41,4 +41,11 @@ func DescribeTools(tools []Tool) string {
 		prompt += tool.Prompt()
 	}
 	return prompt
+}
+
+// ToolInput represents the input to a tool.
+type Input struct {
+	Text   string
+	Action Action
+	Agent  *Agent
 }

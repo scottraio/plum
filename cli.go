@@ -24,10 +24,30 @@ const (
 )
 
 type CliConfig struct {
+	DefaultAgent string
 }
 
 func Cli(config CliConfig) {
-	fmt.Print("> ")
+	logger.Print(`
+Welcome to the Plum CLI!
+------------------------
+
+The Plum CLI Tool allows you to chat with agents and models in the terminal. Useful during development and testing. 
+
+Commands:
+  /agent - choose an agent
+  /model - choose a model
+  /forget - forget everything
+  /train - train the current model
+  /purge - purge the current model
+  /memory - show the current memory
+  exit - exit the CLI
+
+To begin type /agent to select an agent or chat with a model 
+by typing /model. 
+
+	`, "purple")
+
 	// Create a channel to communicate between the main function and the chat function
 	msgChan := make(chan string)
 
@@ -55,6 +75,13 @@ func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, c
 	var currentAgent string
 	var currentModel string
 	var currentContext string
+
+	if config.DefaultAgent != "" {
+		currentContext = "agent"
+		currentAgent = config.DefaultAgent
+	}
+
+	cursor(currentContext, currentAgent, currentModel)
 
 	ctx := context.Background()
 

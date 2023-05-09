@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/scottraio/plum/llms"
+	"github.com/scottraio/plum/logger"
 )
 
 // use godot package to load/read the .env file and
@@ -23,6 +24,12 @@ func GetDotEnvVariable(key string) string {
 func FatalIfError(msg string, err error) {
 	if err != nil {
 		log.Fatalf("%s: %v", msg, err)
+	}
+}
+
+func FatalIfEmpty(label string, msg string) {
+	if msg == "" {
+		logger.LogAndFail(label+"is required", msg, "red")
 	}
 }
 

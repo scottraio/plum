@@ -87,11 +87,9 @@ func (m *Model) Find(query string, filters map[string]string, opts map[string]in
 func (m *Model) Describe(query string, result string) string {
 	return `
 		Model Name: ` + m.Name + `
-		Model Context: ` + m.HowTo + `
-
+		Model Context: ` + strings.ReplaceAll(m.HowTo, "\n", "") + `
 		Model Query (generated from Question): ` + query + `
-		Model Summary: ` + result + `
-		------------------------------------------------------------
+		Model Summary: ` + "```\n" + result + "\n```" + `
 	`
 }
 

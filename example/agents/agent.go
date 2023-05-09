@@ -21,16 +21,16 @@ func CustomerServiceTools() []agents.Tool {
 			Name:        "OrderNumberLookup",
 			Description: "Useful for finding tracking information, order status, and more",
 			HowTo:       "Use the order status and tracking information to find the answer.",
-			Func: func(query string) string {
-				return plum.App.VectorStore["structured"].Query(query, nil, nil)
+			Func: func(input agents.Input) string {
+				return plum.App.VectorStore["structured"].Query(input.Text, nil, nil)
 			},
 		},
 		{
 			Name:        "ProductManuals",
 			Description: "Useful for finding general information about our products",
 			HowTo:       "Use the information returned to find the answer.",
-			Func: func(query string) string {
-				lookup := plum.App.Models["manual"].Return(query)
+			Func: func(input agents.Input) string {
+				lookup := plum.App.Models["manual"].Return(input.Text)
 				return lookup
 			},
 		},
