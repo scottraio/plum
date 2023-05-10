@@ -89,3 +89,25 @@ func (action *Action) ActionToString() string {
 	json, _ := json.Marshal(action)
 	return string(json)
 }
+
+func (action *Action) Branch(input Input, context string) string {
+	prompt := `
+	Steps:
+	` + "```" + input.Plans + "```" + `
+
+	Current Step:
+	` + "```" + input.CurrentStep + "```" + `
+
+	Current Tool:
+	` + "```" + input.ToolName + "```" + `
+
+	Original Input:
+	` + "```" + input.Text + "```" + `
+	
+	You have been given steps, this is the main plan. You are on the Current Step,
+	using the Current Tool. 
+
+	` + context
+
+	return input.LLM.Run(prompt)
+}

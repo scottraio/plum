@@ -27,8 +27,7 @@ Instructions:
 	1.Let's think step by step. You will be provided with a goal and will need to create high-level steps to accomplish it. Your knowledge of Tools will help define what's possible.
 	2. For each step, you will need to plan the actions required to achieve the goal of the step. Use your memory for local context.
 	3. Each action will require a Tool and Input. The Tool is the name of the tool to be used and the Input is the input required by the tool.
-	4. If an action uses a tool that will exceed the token limit (3000), branch it to a new prompt by setting Branch to true.
-	5. Respond back to the software function with a an efficient plan of actions in JSON.
+	4. Respond back to the software function with a an efficient plan of actions in JSON.
 
 -------------------------------------------------------------------------------
 
@@ -39,11 +38,9 @@ Let's begin!
 	"Thought": "Consider the high-level actions required to achieve the goal.",
 	"Steps": [{
 		"Description": "a step to take",
-		"Validate": "how would you validate or test the step?"
 		"Actions": [{
 			"Tool": "name of the tool to be used",
 			"Input": "input required by the tool",
-			"Branch": "false"
 		}]
 	}]
 }
@@ -73,25 +70,32 @@ func (a *AutoAgent) Remember(memory *memory.Memory) agents.Engine {
 // RunActions runs the actions in the agent's decision.
 func (a *AutoAgent) runSteps(steps []agents.Step) string {
 	output := ""
+
+	a.logSteps(steps)
+	logger.Log("Running", "......", "yellow")
+
+	for _, step := range steps {
+		logger.Log("Running Step", step.Description, "yellow")
+
+		// Start a new goroutine for each action
+		for _, action := range step.Actions {
+			// set the step's Description to the action
+			action.StepDescription = step.Description
+
+			// run the action and append the result to the output
+			result := a.RunAction(action)
+			output = output + result
+		}
+	}
+
+	return output
+}
+
+func (a *AutoAgent) logSteps(steps []agents.Step) {
 	for _, step := range steps {
 		logger.Log("Step Planned", step.Description, "purple")
 		for _, action := range step.Actions {
 			logger.Log(action.Tool, action.ToolInput, "purple")
 		}
 	}
-
-	logger.Log("Running", "......", "yellow")
-
-	for _, step := range steps {
-		logger.Log("Running Step", step.Description, "yellow")
-		logger.Log("Step Validation", step.Validate, "yellow")
-
-		// Start a new goroutine for each action
-		for _, action := range step.Actions {
-			action.StepDescription = step.Description
-			result := a.RunAction(action)
-			output = output + result
-		}
-	}
-	return output
 }

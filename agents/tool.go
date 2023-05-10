@@ -45,10 +45,9 @@ func DescribeTools(tools []Tool) string {
 type Input struct {
 	Text        string
 	Action      Action
-	Agent       *Agent
+	Plans       string
 	CurrentStep string
-}
-
-func (input *Input) GetDecisionPrompt() string {
-	return input.Agent.Decision._Prompt
+	ToolName    string
+	ToolHowTo   string
+	LLM         llm.LLM
 }

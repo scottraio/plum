@@ -103,9 +103,12 @@ func (a *Agent) RunAction(act Action) string {
 		if tool.Name == act.Tool {
 			input := Input{
 				Text:        act.ToolInput,
-				Agent:       a,
+				Plans:       a.Plans(),
 				Action:      act,
 				CurrentStep: act.StepDescription,
+				ToolName:    tool.Name,
+				ToolHowTo:   tool.HowTo,
+				LLM:         a.LLM,
 			}
 
 			actionResult = tool.Func(input)
@@ -121,4 +124,38 @@ func (a *Agent) RunAction(act Action) string {
 	}
 
 	return actionResult
+}
+
+//
+// Prompt helper functions
+//
+
+// Returns a string of the agent's plans (steps and/or actions).
+func (a *Agent) Plans() string {
+	mainPlan := ""
+
+	if len(a.Decision.Steps) > 0 {
+		return a.PlansWithSteps(a.Decision.Steps, mainPlan)
+	} else {
+		return a.PlansWithActions(a.Decision.Actions, mainPlan)
+	}
+}
+
+// Returns a string of the agent's steps.
+func (a *Agent) PlansWithSteps(steps []Step, mainPlan string) string {
+	for i, step := range steps {
+		mainPlan += fmt.Sprintf("Step %d. %s", i, step.Description)
+		a.PlansWithActions(step.Actions, mainPlan)
+	}
+
+	return mainPlan
+}
+
+// Returns a string of the agent's actions.
+func (a *Agent) PlansWithActions(actions []Action, mainPlan string) string {
+	for i, action := range actions {
+		mainPlan += fmt.Sprintf("Action %d. %s", i, action.Tool)
+	}
+
+	return mainPlan
 }
