@@ -5,7 +5,6 @@ import (
 	llms "github.com/scottraio/plum/llms"
 	logger "github.com/scottraio/plum/logger"
 	models "github.com/scottraio/plum/models"
-	skills "github.com/scottraio/plum/skills"
 	util "github.com/scottraio/plum/util"
 	store "github.com/scottraio/plum/vectorstores"
 )
@@ -21,7 +20,6 @@ type AppConfig struct {
 	LLM               llms.LLM
 	Embedding         func(input string) []float32
 	Models            map[string]*models.Model
-	Skills            map[string]*skills.Skill
 	Agents            map[string]agents.Engine
 	Env               string
 }
@@ -47,7 +45,6 @@ func Boot(init Initialize) AppConfig {
 		LLM:         InitLLM(init),
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]*models.Model),
-		Skills:      make(map[string]*skills.Skill),
 		Agents:      make(map[string]agents.Engine),
 	}
 
@@ -63,12 +60,6 @@ func GetApp() AppConfig {
 func (a *AppConfig) RegisterModel(name string, m *models.Model) {
 	logger.Log("Model", "Model "+name+" Registered ", "purple")
 	a.Models[name] = m
-}
-
-// Register Skills
-func (a *AppConfig) RegisterSkill(name string, skill *skills.Skill) {
-	logger.Log("Skill", "Skill "+name+" Registered ", "purple")
-	a.Skills[name] = skill
 }
 
 // Register Agents

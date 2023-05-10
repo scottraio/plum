@@ -3,6 +3,7 @@ package agents
 import (
 	plum "github.com/scottraio/plum"
 	agents "github.com/scottraio/plum/agents"
+	"github.com/scottraio/plum/example/skills"
 )
 
 // CustomerServiceAgent represents a customer service agent.
@@ -21,7 +22,7 @@ func AutoTools() []agents.Tool {
 			Description: "Useful for executing shell commands to write software or output code",
 			HowTo:       "",
 			Func: func(input agents.Input) string {
-				return plum.App.Skills["shell"].Return(input.Text)
+				return skills.ShellCommand(input.Text)
 			},
 		},
 	}
