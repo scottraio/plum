@@ -13,6 +13,7 @@ type Decision struct {
 	Thought string   `json:"Thought"`
 	Actions []Action `json:"Actions"`
 	Steps   []Step   `json:"Steps"`
+	_Prompt string
 }
 
 type Step struct {
@@ -25,6 +26,8 @@ type Action struct {
 	Tool      string `json:"Tool"`
 	ToolInput string `json:"Input"`
 	Validate  string `json:"Validate"`
+
+	StepDescription string
 }
 
 // Decision represents a structured decision made by the agent.
@@ -66,6 +69,9 @@ func (a *DecisionPrompt) Decide(prompt string, llm llms.LLM) Decision {
 	logger.Log("Question", a.Input, "cyan")
 	logger.Log("Thought", a.Decision.Thought, "cyan")
 
+	// set the prompt for future use
+	a.Decision._Prompt = decision
+
 	// Inject the agent's input and memory into the prompt
 	return a.Decision
 }
@@ -73,8 +79,13 @@ func (a *DecisionPrompt) Decide(prompt string, llm llms.LLM) Decision {
 // Decide makes a decision based on the agent's input and memory.
 func (a *Decision) StepsToString() string {
 	steps := ""
-	for _, step := range a.Steps {
-		steps += "<Step>" + step.Description + "</Step>\n"
+	for i, step := range a.Steps {
+		steps += fmt.Sprintf("Step %d: %s", i, step.Description)
 	}
 	return steps
+}
+
+func (action *Action) ActionToString() string {
+	json, _ := json.Marshal(action)
+	return string(json)
 }

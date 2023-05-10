@@ -15,11 +15,9 @@ type Tool struct {
 
 func (t *Tool) Prompt() string {
 	template := `
-		<Tool>
-			<Name>{{.Name}}</Name>
-			<Description>{{.Description}}</Description>
-			<How to use>{{.HowTo}}</How to use>
-		</Tool>
+		Tool Name>{{.Name}}</Name>
+		Description: {{.Description}}
+		How to use: {{.HowTo}}
 	`
 
 	return llm.InjectObjectToPrompt(t, template)
@@ -45,7 +43,12 @@ func DescribeTools(tools []Tool) string {
 
 // ToolInput represents the input to a tool.
 type Input struct {
-	Text   string
-	Action Action
-	Agent  *Agent
+	Text        string
+	Action      Action
+	Agent       *Agent
+	CurrentStep string
+}
+
+func (input *Input) GetDecisionPrompt() string {
+	return input.Agent.Decision._Prompt
 }

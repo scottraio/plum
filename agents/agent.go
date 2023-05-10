@@ -51,15 +51,14 @@ type Agent struct {
 //		Steps   []Step   `json:"Steps"`
 //	}
 func (a *Agent) Decide(input string, prompt string) Decision {
-	decision := &DecisionPrompt{
+	decide := &DecisionPrompt{
 		Input:   input,
 		Context: a.Context,
 		Memory:  a.Memory.Format(),
 		Tools:   DescribeTools(a.Tools)}
 
-	prompt = llm.InjectObjectToPrompt(decision, prompt)
-
-	return decision.Decide(prompt, a.LLM)
+	prompt = llm.InjectObjectToPrompt(decide, prompt)
+	return decide.Decide(prompt, a.LLM)
 }
 
 // Run step is basically another decision tree.
@@ -103,9 +102,10 @@ func (a *Agent) RunAction(act Action) string {
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
 			input := Input{
-				Text:   act.ToolInput,
-				Agent:  a,
-				Action: act,
+				Text:        act.ToolInput,
+				Agent:       a,
+				Action:      act,
+				CurrentStep: act.StepDescription,
 			}
 
 			actionResult = tool.Func(input)
