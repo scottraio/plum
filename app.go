@@ -70,7 +70,7 @@ func (a *AppConfig) RegisterAgent(name string, ag agents.Engine) {
 
 // bootLog logs the app config.
 func (a *AppConfig) boot() AppConfig {
-	logger.Log("App", "Plum "+Version, "purple")
+	logger.Log("App", "Plum", "purple")
 
 	for key := range a.VectorStore {
 		logger.Log("Vector Store", "Index "+key+" Registered ", "purple")

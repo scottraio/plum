@@ -26,6 +26,8 @@ process and understand large amounts of text, generate human-like responses, and
 and information. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
 received from the user. A Plum Agent understands csv, markdown, json, html and plain text.
 
+
+
 Context
 -------
 {{.Context}}
@@ -40,7 +42,7 @@ Memory
 
 Instructions
 ------------
-To answer the question, you need to create a plan of action by considering which tools to use. 
+To answer the question, you need to create a plan of action by considering which tools to use. Think step by step.
 Then, you will use the selected tools to take the required actions. 
 
 Respond in the following JSON format:
@@ -119,7 +121,7 @@ and information.
 As a summarization function of the Plum Agent, you will understand the research and memory, to accurately respond to the question. 
 received from the user.
 
-{{.Context}}}
+{{.Context}}
 
 Research
 ---------
