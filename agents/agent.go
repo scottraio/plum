@@ -2,19 +2,12 @@ package agents
 
 import (
 	"fmt"
+	"strconv"
 
 	llm "github.com/scottraio/plum/llms"
 	"github.com/scottraio/plum/logger"
 	memory "github.com/scottraio/plum/memory"
 )
-
-// The Engine interface is the main interface for all agents.
-// It is used on the project-side of the application.
-// New Agents can be created by the project by implementing the Engine interface+Agent Struct.
-type Engine interface {
-	Answer(question string) string
-	Remember(memory *memory.Memory) Engine
-}
 
 // The main Agent object.
 // Agents are the way to interact with the LLM.
@@ -26,8 +19,6 @@ type Engine interface {
 //  3. ZeroShot - Not a few-shot agent, just a quick way to send a input+prompt=answer.
 
 type Agent struct {
-	Engine
-
 	Input   string
 	Context string // user-defined
 
@@ -37,7 +28,34 @@ type Agent struct {
 	Tools     []Tool // user-defined
 	ToolNames []string
 
+	Method   string // user-defined
 	Decision Decision
+
+	Summarize bool
+}
+
+// Run executes the agent's decision-making process.
+func (a *Agent) Answer(input string) string {
+	a.Input = input
+	decision := a.Decide(input, DECISION_PROMPT)
+
+	outputs := a.runActions(decision.Actions)
+
+	answer := ""
+	if a.Summarize {
+		answer = a.summarize(outputs)
+	} else {
+		answer = outputs[0]
+	}
+
+	logger.Log("Answer", answer, "green")
+	return answer
+}
+
+// Remember stores the agent's memory.
+func (a *Agent) Remember(memory *memory.Memory) *Agent {
+	a.Memory = memory
+	return a
 }
 
 // A decision always has an input and a thought.
@@ -51,11 +69,14 @@ type Agent struct {
 //		Steps   []Step   `json:"Steps"`
 //	}
 func (a *Agent) Decide(input string, prompt string) Decision {
+	decisionMethod := GetDecisionMethod(a.Method)
+
 	decide := &DecisionPrompt{
-		Input:   input,
-		Context: a.Context,
-		Memory:  a.Memory.Format(),
-		Tools:   DescribeTools(a.Tools)}
+		Input:        input,
+		Context:      a.Context,
+		Memory:       a.Memory.Format(),
+		Instructions: decisionMethod.Instructions(),
+		Tools:        DescribeTools(a.Tools)}
 
 	prompt = llm.InjectObjectToPrompt(decide, prompt)
 	return decide.Decide(prompt, a.LLM)
@@ -105,6 +126,7 @@ func (a *Agent) RunAction(act Action) string {
 				Text:        act.ToolInput,
 				Plans:       a.Plans(),
 				Action:      act,
+				Memory:      *a.Memory,
 				CurrentStep: act.StepDescription,
 				ToolName:    tool.Name,
 				ToolHowTo:   tool.HowTo,
@@ -117,6 +139,7 @@ func (a *Agent) RunAction(act Action) string {
 				actionResult = "No output. (Input: " + act.ToolInput + "))"
 			}
 
+			logger.Log("Tool "+act.Tool+" Thought", act.Thought, "gray")
 			logger.Log("Tool "+act.Tool+" Input", act.ToolInput, "gray")
 			logger.Log("Tool "+act.Tool+" Output", actionResult, "gray")
 			break
@@ -158,4 +181,31 @@ func (a *Agent) PlansWithActions(actions []Action, mainPlan string) string {
 	}
 
 	return mainPlan
+}
+
+// RunActions runs the actions in the agent's decision.
+func (a *Agent) runActions(actions []Action) []string {
+	summary := []string{}
+	no_actions := len(actions)
+	logger.Log("Number of actions", strconv.Itoa(no_actions), "gray")
+
+	// Create a channel to receive the summaries from each goroutine
+	ch := make(chan string, no_actions)
+
+	for _, action := range actions {
+		logger.Log("Tool", action.Tool, "gray")
+		logger.Log("Tool Input", action.ToolInput, "gray")
+
+		// Start a new goroutine for each action
+		go func(action Action) {
+			ch <- a.RunAction(action)
+		}(action)
+	}
+
+	// Collect the summaries from each goroutine
+	for i := 0; i < len(actions); i++ {
+		summary = append(summary, <-ch)
+	}
+
+	return summary
 }

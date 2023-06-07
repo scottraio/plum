@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	llm "github.com/scottraio/plum/llms"
+	memory "github.com/scottraio/plum/memory"
 )
 
 type Tool struct {
@@ -17,7 +18,6 @@ func (t *Tool) Prompt() string {
 	template := `
 		Tool Name: {{.Name}}
 		Description: {{.Description}}
-		How to use: {{.HowTo}}
 	`
 
 	return llm.InjectObjectToPrompt(t, "```"+template+"```")
@@ -45,6 +45,7 @@ func DescribeTools(tools []Tool) string {
 type Input struct {
 	Text        string
 	Action      Action
+	Memory      memory.Memory
 	Plans       string
 	CurrentStep string
 	ToolName    string

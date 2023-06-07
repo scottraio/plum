@@ -20,7 +20,7 @@ type AppConfig struct {
 	LLM               llms.LLM
 	Embedding         func(input string) []float32
 	Models            map[string]*models.Model
-	Agents            map[string]agents.Engine
+	Agents            map[string]agents.Agent
 	Env               string
 }
 
@@ -45,7 +45,7 @@ func Boot(init Initialize) AppConfig {
 		LLM:         InitLLM(init),
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]*models.Model),
-		Agents:      make(map[string]agents.Engine),
+		Agents:      make(map[string]agents.Agent),
 	}
 
 	return App.boot()
@@ -63,9 +63,9 @@ func (a *AppConfig) RegisterModel(name string, m *models.Model) {
 }
 
 // Register Agents
-func (a *AppConfig) RegisterAgent(name string, ag agents.Engine) {
+func (a *AppConfig) RegisterAgent(name string, agent agents.Agent) {
 	logger.Log("Agent", "Agent "+name+" Registered ", "purple")
-	a.Agents[name] = ag
+	a.Agents[name] = agent
 }
 
 // bootLog logs the app config.

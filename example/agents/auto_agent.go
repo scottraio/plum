@@ -7,11 +7,14 @@ import (
 )
 
 // CustomerServiceAgent represents a customer service agent.
-func AutoAgent() agents.Engine {
+func AutoAgent() agents.Agent {
 	// Create the agent.
-	return plum.AutoAgent(`
-		You are an expert programmer. You know how to build apps and websites.
-	`, CustomerServiceTools())
+	return plum.Agent(agents.Agent{
+		Context: `You are an expert programmer. You know how to build apps and websites.
+	}`,
+		Tools:  AutoTools(),
+		Method: "sequential_selection",
+	})
 }
 
 func AutoTools() []agents.Tool {
