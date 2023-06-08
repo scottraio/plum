@@ -1,4 +1,4 @@
-package agents
+package decision
 
 const ITERATION_INSTRUCTIONS = `
 To answer the question, you need to create a plan of action by considering which tools to use. Think step by step.

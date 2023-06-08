@@ -1,12 +1,5 @@
 package agents
 
-import (
-	"strings"
-
-	llm "github.com/scottraio/plum/llms"
-	"github.com/scottraio/plum/logger"
-)
-
 // Summary represents a summary of multiple actions ran by an agent.
 type SummaryPrompt struct {
 	Context string
@@ -42,21 +35,51 @@ Use the knowledge and memory (if available) to answer the question. DO NOT make 
 
 Answers are helpful, friendly, informative, and confident. Use lists when possible. 
 
-Answer this question in Markdown format: {{.Input}}
+Additionally, evaluate the accuracy of the answer to the question. Determine a score (float64) from 0 to 1 that depicts the quality of the answer. Respond in JSON format.
 
-Begin!
+
+Respond in the following JSON format ONLY!
+------------------------------------------
+{
+	"question" : "{{.Input}}",
+	"answer" : "the answer to the question",
+	"score" : "the score of quality of the answer as float64",
+	"reason": "the reason for the score with ways to improve"
+}
+
+Let's get started!
 `
 
-func (a *Agent) summarize(toolOutputs []string) string {
-	s := SummaryPrompt{
-		Input:   a.Input,
-		Context: a.Context,
-		Summary: strings.Join(toolOutputs, "\n"),
-		Memory:  a.Memory.Format()}
+// func (a *Agent) summarize(toolOutputs []string) string {
+// 	var scoreResult ScoreResult
 
-	prompt := llm.InjectObjectToPrompt(s, SUMMARY_PROMPT)
-	// Log prompt to log file, do not show in stdout
-	logger.PersistLog(prompt)
+// 	s := SummaryPrompt{
+// 		Input:   a.Input,
+// 		Context: a.Context,
+// 		Summary: strings.Join(toolOutputs, "\n"),
+// 		Memory:  a.Memory.Format()}
 
-	return a.LLM.Run(prompt)
-}
+// 	prompt := llm.InjectObjectToPrompt(s, SUMMARY_PROMPT)
+// 	// Log prompt to log file, do not show in stdout
+// 	logger.PersistLog(prompt)
+
+// 	answer := a.LLM.Run(prompt)
+
+// 	err := json.Unmarshal([]byte(answer), &scoreResult)
+// 	if err != nil {
+// 		logger.Log("Error", "There was an error with the response from the LLM when trying to Unmarshal the JSON from the Summary Prompt, retrying: "+fmt.Sprintf("%v", err)+" original decision: "+scoreResult.Answer, "red")
+// 		return a.summarize(toolOutputs)
+// 	}
+
+// 	logger.Log("Score", fmt.Sprintf("%f", scoreResult.Score), "purple")
+// 	logger.Log("Reason", scoreResult.Reason, "purple")
+
+// 	if scoreResult.Score > 0.9 {
+// 		logger.Log("Answer", scoreResult.Answer, "green")
+// 		return scoreResult.Answer
+// 	} else {
+// 		logger.Log("Retrying", "Score too low", "purple")
+
+// 		return a.Answer(fmt.Sprintf("Question: %s, Previous Answer: %s \n Suggestions: %s", scoreResult.Question, scoreResult.Answer, scoreResult.Reason))
+// 	}
+// }

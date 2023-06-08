@@ -1,4 +1,4 @@
-package agents
+package decision
 
 const PARALLEL_INSTRUCTIONS = `
 To answer the question, you will need to form an input for each tool. 

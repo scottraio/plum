@@ -1,14 +1,17 @@
 package memory
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/scottraio/plum/logger"
+)
 
 type Memory struct {
 	History []ChatHistory
 }
-
 type ChatHistory struct {
-	Query  string `json:"query"`
-	Answer string `json:"answer"`
+	Content string `json:"content"`
+	Role    string `json:"role"`
 }
 
 func LoadMemory(history []ChatHistory) *Memory {
@@ -17,8 +20,9 @@ func LoadMemory(history []ChatHistory) *Memory {
 	return m
 }
 
-func (m *Memory) Add(query string, answer string) {
-	m.History = append(m.History, ChatHistory{query, answer})
+func (m *Memory) Add(content string, role string, color string) {
+	logger.Log(role, content, color)
+	m.History = append(m.History, ChatHistory{content, role})
 }
 
 func (c *ChatHistory) Memory() *Memory {
@@ -29,7 +33,7 @@ func (m *Memory) Format() string {
 	var output string
 	output = "\n"
 	for i := range m.History {
-		output += fmt.Sprintf("%d. in => %s out => %s\n", i, m.History[i].Query, m.History[i].Answer)
+		output += fmt.Sprintf("%d. role => %s content => %s\n", i, m.History[i].Role, m.History[i].Content)
 	}
 	return output
 }

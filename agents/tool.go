@@ -3,6 +3,7 @@ package agents
 import (
 	"encoding/json"
 
+	decision "github.com/scottraio/plum/agents/decision"
 	llm "github.com/scottraio/plum/llms"
 	memory "github.com/scottraio/plum/memory"
 )
@@ -44,7 +45,7 @@ func DescribeTools(tools []Tool) string {
 // ToolInput represents the input to a tool.
 type Input struct {
 	Text        string
-	Action      Action
+	Action      decision.Action
 	Memory      memory.Memory
 	Plans       string
 	CurrentStep string

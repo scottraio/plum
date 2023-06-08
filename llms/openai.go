@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sashabaranov/go-openai"
+	"github.com/scottraio/plum/memory"
 )
 
 type OpenAIConfig struct {
@@ -38,17 +39,21 @@ func (ai *OpenAI) Client() LLM {
 }
 
 // Run returns a response from OpenAI.
-func (ai *OpenAI) Run(prompt string) string {
+func (ai *OpenAI) Run(memory *memory.Memory) string {
+	var messages []openai.ChatCompletionMessage
+
+	for _, h := range memory.History {
+		messages = append(messages, openai.ChatCompletionMessage{
+			Role:    h.Role,
+			Content: h.Content,
+		})
+	}
+
 	resp, err := ai._Client.CreateChatCompletion(
 		ai._Context,
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt,
-				},
-			},
+			Model:    openai.GPT3Dot5Turbo,
+			Messages: messages,
 		},
 	)
 

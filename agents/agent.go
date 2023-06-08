@@ -1,9 +1,9 @@
 package agents
 
 import (
-	"fmt"
 	"strconv"
 
+	decision "github.com/scottraio/plum/agents/decision"
 	llm "github.com/scottraio/plum/llms"
 	"github.com/scottraio/plum/logger"
 	memory "github.com/scottraio/plum/memory"
@@ -29,26 +29,36 @@ type Agent struct {
 	ToolNames []string
 
 	Method   string // user-defined
-	Decision Decision
+	Decision decision.Decision
 
 	Summarize bool
+	Score     bool
 }
 
 // Run executes the agent's decision-making process.
 func (a *Agent) Answer(input string) string {
 	a.Input = input
-	decision := a.Decide(input, DECISION_PROMPT)
+
+	a.Memory.Add(`A Plum Agent is a powerful language model that can assist with a wide range of tasks, including 
+	answering questions and providing in-depth explanations and discussions on various topics. It can 
+	process and understand large amounts of text, generate human-like responses, and provide valuable insights 
+	and information. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
+	received from the user. A Plum Agent understands csv, markdown, json, html and plain text.`, "system", "purple")
+
+	a.Memory.Add(a.Context, "system", "purple")
+
+	decision := a.Decide()
 
 	outputs := a.runActions(decision.Actions)
 
-	answer := ""
-	if a.Summarize {
-		answer = a.summarize(outputs)
-	} else {
-		answer = outputs[0]
+	for _, output := range outputs {
+		a.Memory.Add(output, "system", "orange")
 	}
 
-	logger.Log("Answer", answer, "green")
+	a.Memory.Add(input, "user", "white")
+	answer := a.LLM.Run(a.Memory)
+	a.Memory.Add(answer, "assistant", "green")
+
 	return answer
 }
 
@@ -68,18 +78,19 @@ func (a *Agent) Remember(memory *memory.Memory) *Agent {
 //		Actions []Action `json:"Actions"`
 //		Steps   []Step   `json:"Steps"`
 //	}
-func (a *Agent) Decide(input string, prompt string) Decision {
-	decisionMethod := GetDecisionMethod(a.Method)
+func (a *Agent) Decide() decision.DecisionResp {
+	decisionMethod := decision.GetDecisionMethod(a.Method)
 
-	decide := &DecisionPrompt{
-		Input:        input,
+	decide := &decision.Decision{
+		Input:        a.Input,
 		Context:      a.Context,
-		Memory:       a.Memory.Format(),
-		Instructions: decisionMethod.Instructions(),
-		Tools:        DescribeTools(a.Tools)}
+		Instructions: decisionMethod.Instructions()}
 
-	prompt = llm.InjectObjectToPrompt(decide, prompt)
-	return decide.Decide(prompt, a.LLM)
+	for _, tool := range a.Tools {
+		a.Memory.Add(tool.Prompt(), "system", "orange")
+	}
+
+	return decide.Decide(a.Memory, a.LLM)
 }
 
 // Run step is basically another decision tree.
@@ -93,10 +104,10 @@ func (a *Agent) Decide(input string, prompt string) Decision {
 //	 }
 //
 // The prompt arg takes any agent prompt that outputs Actions.
-func (a *Agent) RunStep(step Step, prompt string) Decision {
-	input := fmt.Sprintf("Input: %s. Step: %s", a.Input, step.Description)
-	return a.Decide(input, prompt)
-}
+// func (a *Agent) RunStep(step Step, prompt string) Decision {
+// 	input := fmt.Sprintf("Input: %s. Step: %s", a.Input, step.Description)
+// 	return a.Decide(input, prompt)
+// }
 
 // Runs the Action, which in turn runs the user-defined func on the Tool.
 //
@@ -116,7 +127,7 @@ func (a *Agent) RunStep(step Step, prompt string) Decision {
 //	 }
 //
 // The output is the output of the Tool Func.
-func (a *Agent) RunAction(act Action) string {
+func (a *Agent) RunAction(act decision.Action) string {
 	var actionResult string
 
 	// TODO: This should be a goroutine
@@ -124,7 +135,6 @@ func (a *Agent) RunAction(act Action) string {
 		if tool.Name == act.Tool {
 			input := Input{
 				Text:        act.ToolInput,
-				Plans:       a.Plans(),
 				Action:      act,
 				Memory:      *a.Memory,
 				CurrentStep: act.StepDescription,
@@ -139,9 +149,9 @@ func (a *Agent) RunAction(act Action) string {
 				actionResult = "No output. (Input: " + act.ToolInput + "))"
 			}
 
-			logger.Log("Tool "+act.Tool+" Thought", act.Thought, "gray")
-			logger.Log("Tool "+act.Tool+" Input", act.ToolInput, "gray")
-			logger.Log("Tool "+act.Tool+" Output", actionResult, "gray")
+			// logger.Log("Tool "+act.Tool+" Thought", act.Thought, "gray")
+			// logger.Log("Tool "+act.Tool+" Input", act.ToolInput, "gray")
+			// logger.Log("Tool "+act.Tool+" Output", actionResult, "gray")
 			break
 		}
 	}
@@ -154,37 +164,37 @@ func (a *Agent) RunAction(act Action) string {
 //
 
 // Returns a string of the agent's plans (steps and/or actions).
-func (a *Agent) Plans() string {
-	mainPlan := ""
+// func (a *Agent) Plans() string {
+// 	mainPlan := ""
 
-	if len(a.Decision.Steps) > 0 {
-		return a.PlansWithSteps(a.Decision.Steps, mainPlan)
-	} else {
-		return a.PlansWithActions(a.Decision.Actions, mainPlan)
-	}
-}
+// 	if len(a.Decision.Steps) > 0 {
+// 		return a.PlansWithSteps(a.Decision.Steps, mainPlan)
+// 	} else {
+// 		return a.PlansWithActions(a.Decision.Actions, mainPlan)
+// 	}
+// }
 
-// Returns a string of the agent's steps.
-func (a *Agent) PlansWithSteps(steps []Step, mainPlan string) string {
-	for i, step := range steps {
-		mainPlan += fmt.Sprintf("Step %d. %s", i, step.Description)
-		a.PlansWithActions(step.Actions, mainPlan)
-	}
+// // Returns a string of the agent's steps.
+// func (a *Agent) PlansWithSteps(steps []decision.Step, mainPlan string) string {
+// 	for i, step := range steps {
+// 		mainPlan += fmt.Sprintf("Step %d. %s", i, step.Description)
+// 		a.PlansWithActions(step.Actions, mainPlan)
+// 	}
 
-	return mainPlan
-}
+// 	return mainPlan
+// }
 
-// Returns a string of the agent's actions.
-func (a *Agent) PlansWithActions(actions []Action, mainPlan string) string {
-	for i, action := range actions {
-		mainPlan += fmt.Sprintf("Action %d. %s", i, action.Tool)
-	}
+// // Returns a string of the agent's actions.
+// func (a *Agent) PlansWithActions(actions []decision.Action, mainPlan string) string {
+// 	for i, action := range actions {
+// 		mainPlan += fmt.Sprintf("Action %d. %s", i, action.Tool)
+// 	}
 
-	return mainPlan
-}
+// 	return mainPlan
+// }
 
 // RunActions runs the actions in the agent's decision.
-func (a *Agent) runActions(actions []Action) []string {
+func (a *Agent) runActions(actions []decision.Action) []string {
 	summary := []string{}
 	no_actions := len(actions)
 	logger.Log("Number of actions", strconv.Itoa(no_actions), "gray")
@@ -197,7 +207,7 @@ func (a *Agent) runActions(actions []Action) []string {
 		logger.Log("Tool Input", action.ToolInput, "gray")
 
 		// Start a new goroutine for each action
-		go func(action Action) {
+		go func(action decision.Action) {
 			ch <- a.RunAction(action)
 		}(action)
 	}

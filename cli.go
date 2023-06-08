@@ -160,12 +160,9 @@ func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, c
 			// Run the agent
 			agent := App.Agents[currentAgent]
 
-			engine := agent.Remember(mem)
-			answer := engine.Answer(input)
-
-			// Append new memory to the conversation
-			history := memory.ChatHistory{Query: input, Answer: answer}
-			mem.History = append(mem.History, history)
+			mem.Add(input, "user", "white")
+			answer := agent.Remember(mem).Answer(input)
+			mem.Add(answer, "assistant", "green")
 
 			cursor(currentContext, currentAgent, currentModel)
 		} else if currentContext == "model" {

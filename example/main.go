@@ -29,8 +29,12 @@ func main() {
 
 	history := []memory.ChatHistory{
 		{
-			Query:  "I need help with my [Product Name]",
-			Answer: "I'm sorry to hear that. What seems to be the problem?",
+			Role:    "user",
+			Content: "I need help with my [Product Name]",
+		},
+		{
+			Role:    "ai",
+			Content: "I'm sorry to hear that. What seems to be the problem?",
 		},
 	}
 

@@ -1,4 +1,4 @@
-package agents
+package decision
 
 const MULTIPLE_SELECTION_INSTRUCTIONS = `
 Think step by step and create a plan of action by considering which tools to use. 

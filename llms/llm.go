@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"strings"
 	"text/template"
+
+	"github.com/scottraio/plum/memory"
 )
 
 type LLM interface {
 	Client() LLM
-	Run(prompt string) string
+	Run(memory *memory.Memory) string
 }
 
 // InjectInputsToPrompt injects the agent's input and memory into the prompt.

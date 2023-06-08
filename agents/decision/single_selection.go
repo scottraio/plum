@@ -1,4 +1,4 @@
-package agents
+package decision
 
 const SINGLE_INSTRUCTIONS = `
 Think about the question and the tools you have available.
