@@ -39,15 +39,19 @@ func (ai *OpenAI) Client() LLM {
 }
 
 // Run returns a response from OpenAI.
-func (ai *OpenAI) Run(memory *memory.Memory) string {
+func (ai *OpenAI) Run(memory memory.Memory) string {
 	var messages []openai.ChatCompletionMessage
 
+	println("start---------------------------------------------")
 	for _, h := range memory.History {
+
+		println(h.Content)
 		messages = append(messages, openai.ChatCompletionMessage{
 			Role:    h.Role,
 			Content: h.Content,
 		})
 	}
+	println("end---------------------------------------------")
 
 	resp, err := ai._Client.CreateChatCompletion(
 		ai._Context,

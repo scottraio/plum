@@ -52,7 +52,7 @@ by typing /model.
 	msgChan := make(chan string)
 
 	// Create a new Memory struct
-	mem := &memory.Memory{}
+	mem := memory.Memory{}
 
 	// Continuously read user input and send it to the chat function
 	reader := bufio.NewReader(os.Stdin)
@@ -71,7 +71,7 @@ by typing /model.
 	}
 }
 
-func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
+func startCli(mem memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
 	var currentAgent string
 	var currentModel string
 	var currentContext string
@@ -160,9 +160,7 @@ func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, c
 			// Run the agent
 			agent := App.Agents[currentAgent]
 
-			mem.Add(input, "user", "white")
-			answer := agent.Remember(mem).Answer(input)
-			mem.Add(answer, "assistant", "green")
+			agent.Remember(mem).Answer(input)
 
 			cursor(currentContext, currentAgent, currentModel)
 		} else if currentContext == "model" {

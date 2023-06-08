@@ -10,13 +10,11 @@ import (
 )
 
 const DECISION_PROMPT = `
-Follow these instructions to answer the question
-{{.Context}}
+Follow these instructions to answer the question: {{.Instructions}}
 
-{{.Instructions}}
+Tools: {{.Tools}}
 
-
-Respond in the following JSON format:
+Respond with the following JSON format:
 {
 	"Question": "{{.Input}}",
 	"Thought": "the thought about what action(s) and input(s) are required to answer the question.",
@@ -27,7 +25,7 @@ Respond in the following JSON format:
 	}]
 }
 
-Let's get started!
+Let's begin!
 `
 
 // Decision represents a structured decision made by the agent.
@@ -85,26 +83,39 @@ func GetDecisionMethod(method string) DecisionMethod {
 }
 
 // Decide makes a decision based on the agent's input and memory.
-func (d *Decision) Decide(memory *memory.Memory, llm llms.LLM) DecisionResp {
+func (d *Decision) Decide(mem memory.Memory, llm llms.LLM) DecisionResp {
 	prompt := llms.InjectObjectToPrompt(d, DECISION_PROMPT)
-	memory.Add(prompt, "system", "purple")
+
+	mem.Add(`Background: You are a Plum Agent, a powerful language model that can assist with a wide range of tasks, including 
+	answering questions and providing in-depth explanations and discussions on various topics. You can 
+	process and understand large amounts of ext, generate human-like responses, and provide valuable insights  
+	and information. You can make decisions and perform complex decision making and reasoning. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
+	received from the user. A Plum Agent understands csv, markdown, json, html and plain text.`, "background")
+	mem.Add("Context: "+d.Context, "context")
+	mem.Add("Instructions: "+prompt, "output_format")
+
+	logger.Log("Memory", fmt.Sprintf("%v", len(mem.History)), "yellow")
 
 	// Log prompt to log file, do not show in stdout
 	logger.PersistLog(prompt)
 
 	// Run the LLM
-	decision := llm.Run(memory)
-	memory.Add(decision, "assistant", "green")
+	decision := llm.Run(mem)
 
 	// Parse the JSON response to get the Decision object
 	err := json.Unmarshal([]byte(decision), &d.DecisionResp)
 	if err != nil {
 		logger.Log("Error", "There was an error with the response from the LLM, retrying: "+fmt.Sprintf("%v", err)+" original decision: "+decision, "red")
-		d.Decide(memory, llm)
+		d.Decide(mem, llm)
 	}
 
 	// set the prompt for future use
 	d.DecisionResp._Prompt = decision
+
+	for _, action := range d.DecisionResp.Actions {
+		toolSelection := fmt.Sprintf("Selected the %s tool, because %s. Query: %s", action.Tool, action.Thought, action.ToolInput)
+		mem.Add(toolSelection, "assistant")
+	}
 
 	// Inject the agent's input and memory into the prompt
 	return d.DecisionResp

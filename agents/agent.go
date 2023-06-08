@@ -1,11 +1,8 @@
 package agents
 
 import (
-	"strconv"
-
 	decision "github.com/scottraio/plum/agents/decision"
 	llm "github.com/scottraio/plum/llms"
-	"github.com/scottraio/plum/logger"
 	memory "github.com/scottraio/plum/memory"
 )
 
@@ -23,7 +20,7 @@ type Agent struct {
 	Context string // user-defined
 
 	LLM    llm.LLM
-	Memory *memory.Memory
+	Memory memory.Memory
 
 	Tools     []Tool // user-defined
 	ToolNames []string
@@ -31,40 +28,40 @@ type Agent struct {
 	Method   string // user-defined
 	Decision decision.Decision
 
-	Summarize bool
-	Score     bool
+	BelongsTo string // user-defined
+	HasMany   []string
 }
 
 // Run executes the agent's decision-making process.
 func (a *Agent) Answer(input string) string {
 	a.Input = input
-
-	a.Memory.Add(`A Plum Agent is a powerful language model that can assist with a wide range of tasks, including 
-	answering questions and providing in-depth explanations and discussions on various topics. It can 
-	process and understand large amounts of text, generate human-like responses, and provide valuable insights 
-	and information. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
-	received from the user. A Plum Agent understands csv, markdown, json, html and plain text.`, "system", "purple")
-
-	a.Memory.Add(a.Context, "system", "purple")
+	a.Memory = memory.Memory{}
 
 	decision := a.Decide()
 
 	outputs := a.runActions(decision.Actions)
 
 	for _, output := range outputs {
-		a.Memory.Add(output, "system", "orange")
+		a.Memory.Add(output, "assistant")
 	}
 
-	a.Memory.Add(input, "user", "white")
+	a.Memory.Add(a.Context, "context")
+
+	// Question
+	a.Memory.Add(input, "user")
+
 	answer := a.LLM.Run(a.Memory)
-	a.Memory.Add(answer, "assistant", "green")
+
+	// Answer
+	a.Memory.Add(answer, "answer")
 
 	return answer
 }
 
 // Remember stores the agent's memory.
-func (a *Agent) Remember(memory *memory.Memory) *Agent {
+func (a *Agent) Remember(memory memory.Memory) *Agent {
 	a.Memory = memory
+
 	return a
 }
 
@@ -84,10 +81,8 @@ func (a *Agent) Decide() decision.DecisionResp {
 	decide := &decision.Decision{
 		Input:        a.Input,
 		Context:      a.Context,
-		Instructions: decisionMethod.Instructions()}
-
-	for _, tool := range a.Tools {
-		a.Memory.Add(tool.Prompt(), "system", "orange")
+		Instructions: decisionMethod.Instructions(),
+		Tools:        DescribeTools(a.Tools),
 	}
 
 	return decide.Decide(a.Memory, a.LLM)
@@ -136,7 +131,7 @@ func (a *Agent) RunAction(act decision.Action) string {
 			input := Input{
 				Text:        act.ToolInput,
 				Action:      act,
-				Memory:      *a.Memory,
+				Memory:      a.Memory,
 				CurrentStep: act.StepDescription,
 				ToolName:    tool.Name,
 				ToolHowTo:   tool.HowTo,
@@ -197,14 +192,14 @@ func (a *Agent) RunAction(act decision.Action) string {
 func (a *Agent) runActions(actions []decision.Action) []string {
 	summary := []string{}
 	no_actions := len(actions)
-	logger.Log("Number of actions", strconv.Itoa(no_actions), "gray")
+	// logger.Log("Number of actions", strconv.Itoa(no_actions), "gray")
 
 	// Create a channel to receive the summaries from each goroutine
 	ch := make(chan string, no_actions)
 
 	for _, action := range actions {
-		logger.Log("Tool", action.Tool, "gray")
-		logger.Log("Tool Input", action.ToolInput, "gray")
+		// logger.Log("Tool", action.Tool, "gray")
+		//a.Memory.Add(action.ToolInput, "user")
 
 		// Start a new goroutine for each action
 		go func(action decision.Action) {

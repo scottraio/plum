@@ -16,12 +16,8 @@ type Tool struct {
 }
 
 func (t *Tool) Prompt() string {
-	template := `
-		Tool Name: {{.Name}}
-		Description: {{.Description}}
-	`
-
-	return llm.InjectObjectToPrompt(t, "```"+template+"```")
+	template := `Tool Name: {{.Name}} Description: {{.Description}} \n`
+	return llm.InjectObjectToPrompt(t, template)
 }
 
 // GetToolNamesAsJSON returns the agent's tool names as a JSON string.

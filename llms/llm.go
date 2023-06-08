@@ -10,7 +10,7 @@ import (
 
 type LLM interface {
 	Client() LLM
-	Run(memory *memory.Memory) string
+	Run(memory memory.Memory) string
 }
 
 // InjectInputsToPrompt injects the agent's input and memory into the prompt.
