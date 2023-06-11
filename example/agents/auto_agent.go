@@ -10,10 +10,10 @@ import (
 func AutoAgent() agents.Agent {
 	// Create the agent.
 	return plum.Agent(agents.Agent{
-		Context: `You are an expert programmer. You know how to build apps and websites.
-	}`,
-		Tools:  AutoTools(),
-		Method: "sequential_selection",
+		DecisionContext: "You are an expert programmer. You know how to build apps and websites.",
+		AnswerContext:   "",
+		Tools:           AutoTools(),
+		Method:          "sequential_selection",
 	})
 }
 

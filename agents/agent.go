@@ -3,6 +3,7 @@ package agents
 import (
 	decision "github.com/scottraio/plum/agents/decision"
 	llm "github.com/scottraio/plum/llms"
+	"github.com/scottraio/plum/logger"
 	memory "github.com/scottraio/plum/memory"
 )
 
@@ -16,8 +17,12 @@ import (
 //  3. ZeroShot - Not a few-shot agent, just a quick way to send a input+prompt=answer.
 
 type Agent struct {
-	Input   string
-	Context string // user-defined
+	Name  string
+	Input string
+	Path  string
+
+	DecisionContext string
+	AnswerContext   string
 
 	LLM    llm.LLM
 	Memory memory.Memory
@@ -30,12 +35,17 @@ type Agent struct {
 
 	BelongsTo string // user-defined
 	HasMany   []string
+
+	DecisionRules []string
+	AnswerRules   []string
 }
 
 // Run executes the agent's decision-making process.
 func (a *Agent) Answer(input string) string {
 	a.Input = input
 	a.Memory = memory.Memory{}
+
+	logger.Log(a.Path+"Thinking", input, "cyan")
 
 	decision := a.Decide()
 
@@ -45,7 +55,14 @@ func (a *Agent) Answer(input string) string {
 		a.Memory.Add(output, "assistant")
 	}
 
-	a.Memory.Add(a.Context, "context")
+	a.Memory.Add(a.AnswerContext, "context")
+
+	rules := "Follow these rules:"
+	for _, rule := range a.AnswerRules {
+		rules += "\n" + rule
+	}
+
+	a.Memory.Add(rules, "system")
 
 	// Question
 	a.Memory.Add(input, "user")
@@ -54,6 +71,7 @@ func (a *Agent) Answer(input string) string {
 
 	// Answer
 	a.Memory.Add(answer, "answer")
+	logger.Log(a.Path+"Answer", answer, "green")
 
 	return answer
 }
@@ -61,6 +79,12 @@ func (a *Agent) Answer(input string) string {
 // Remember stores the agent's memory.
 func (a *Agent) Remember(memory memory.Memory) *Agent {
 	a.Memory = memory
+
+	return a
+}
+
+func (a *Agent) CallingAgent(name string) *Agent {
+	a.Path = name + " > " + a.Name + " > "
 
 	return a
 }
@@ -80,9 +104,11 @@ func (a *Agent) Decide() decision.DecisionResp {
 
 	decide := &decision.Decision{
 		Input:        a.Input,
-		Context:      a.Context,
+		Context:      a.DecisionContext,
 		Instructions: decisionMethod.Instructions(),
 		Tools:        DescribeTools(a.Tools),
+		Path:         a.Path,
+		Rules:        a.DecisionRules,
 	}
 
 	return decide.Decide(a.Memory, a.LLM)
@@ -129,14 +155,17 @@ func (a *Agent) RunAction(act decision.Action) string {
 	for _, tool := range a.Tools {
 		if tool.Name == act.Tool {
 			input := Input{
-				Text:        act.ToolInput,
-				Action:      act,
-				Memory:      a.Memory,
-				CurrentStep: act.StepDescription,
-				ToolName:    tool.Name,
-				ToolHowTo:   tool.HowTo,
-				LLM:         a.LLM,
+				CallingAgent: a.Name,
+				Text:         act.ToolInput,
+				Action:       act,
+				Memory:       a.Memory,
+				CurrentStep:  act.StepDescription,
+				ToolName:     tool.Name,
+				ToolHowTo:    tool.HowTo,
+				LLM:          a.LLM,
 			}
+
+			tool.CallingAgent = a.Name
 
 			actionResult = tool.Func(input)
 

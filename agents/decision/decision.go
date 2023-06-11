@@ -10,7 +10,8 @@ import (
 )
 
 const DECISION_PROMPT = `
-Follow these instructions to answer the question: {{.Instructions}}
+Follow these instructions to answer the question: 
+{{.Instructions}}
 
 Tools: {{.Tools}}
 
@@ -35,6 +36,8 @@ type Decision struct {
 	Memory       string
 	Tools        string
 	Instructions string
+	Path         string
+	Rules        []string
 
 	DecisionResp DecisionResp
 }
@@ -86,15 +89,18 @@ func GetDecisionMethod(method string) DecisionMethod {
 func (d *Decision) Decide(mem memory.Memory, llm llms.LLM) DecisionResp {
 	prompt := llms.InjectObjectToPrompt(d, DECISION_PROMPT)
 
-	mem.Add(`Background: You are a Plum Agent, a powerful language model that can assist with a wide range of tasks, including 
-	answering questions and providing in-depth explanations and discussions on various topics. You can 
-	process and understand large amounts of ext, generate human-like responses, and provide valuable insights  
-	and information. You can make decisions and perform complex decision making and reasoning. As a JSON API, a Plum Agent determines the necessary actions to take based on the input 
-	received from the user. A Plum Agent understands csv, markdown, json, html and plain text.`, "background")
+	mem.Add("Background: You are a Plum Agent, a powerful language model that can assist with a wide range of tasks, including answering questions and providing in-depth explanations and discussions on various topics. You can process and understand large amounts of ext, generate human-like responses, and provide valuable insights  and information. You can make decisions and perform complex decision making and reasoning. As a JSON API, a Plum Agent determines the necessary actions to take based on the input received from the user. A Plum Agent understands csv, markdown, json, html and plain text.", "background")
 	mem.Add("Context: "+d.Context, "context")
 	mem.Add("Instructions: "+prompt, "output_format")
 
-	logger.Log("Memory", fmt.Sprintf("%v", len(mem.History)), "yellow")
+	if len(d.Rules) > 0 {
+		rules := "Follow these rules: "
+		for _, rule := range d.Rules {
+			rules += "\n" + rule
+		}
+
+		mem.Add(rules, "system")
+	}
 
 	// Log prompt to log file, do not show in stdout
 	logger.PersistLog(prompt)
@@ -114,7 +120,8 @@ func (d *Decision) Decide(mem memory.Memory, llm llms.LLM) DecisionResp {
 
 	for _, action := range d.DecisionResp.Actions {
 		toolSelection := fmt.Sprintf("Selected the %s tool, because %s. Query: %s", action.Tool, action.Thought, action.ToolInput)
-		mem.Add(toolSelection, "assistant")
+		logger.Log(d.Path+"Decision", toolSelection, "yellow")
+		mem.Add(toolSelection, "system")
 	}
 
 	// Inject the agent's input and memory into the prompt

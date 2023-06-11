@@ -5,6 +5,7 @@ Think step by step and create a plan of action by considering which tools to use
 
 Once you have a plan, you will use the selected tools to take the required actions. Select as many tools as needed.
 
+Follow the rules.
 `
 
 // Decision represents a structured decision made by the agent.

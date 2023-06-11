@@ -9,10 +9,11 @@ import (
 )
 
 type Tool struct {
-	Name        string
-	Description string
-	HowTo       string
-	Func        func(input Input) string
+	Name         string
+	Description  string
+	HowTo        string
+	CallingAgent string
+	Func         func(input Input) string
 }
 
 func (t *Tool) Prompt() string {
@@ -40,12 +41,13 @@ func DescribeTools(tools []Tool) string {
 
 // ToolInput represents the input to a tool.
 type Input struct {
-	Text        string
-	Action      decision.Action
-	Memory      memory.Memory
-	Plans       string
-	CurrentStep string
-	ToolName    string
-	ToolHowTo   string
-	LLM         llm.LLM
+	Text         string
+	CallingAgent string
+	Action       decision.Action
+	Memory       memory.Memory
+	Plans        string
+	CurrentStep  string
+	ToolName     string
+	ToolHowTo    string
+	LLM          llm.LLM
 }

@@ -9,10 +9,10 @@ import (
 func CustomerServiceAgent() agents.Agent {
 	// Create the agent.
 	return plum.Agent(agents.Agent{
-		Context: `You are the official [Company Name] customer service assistant. Help and assist me with troubleshooting, guiding, and answer questions on [Company Name] products only.
-	`,
-		Tools:  CustomerServiceTools(),
-		Method: "single_selection",
+		DecisionContext: "You are the official [Company Name] customer service assistant. Help and assist me with troubleshooting, guiding, and answer questions on [Company Name] products only.",
+		AnswerContext:   "",
+		Tools:           CustomerServiceTools(),
+		Method:          "single_selection",
 	})
 }
 

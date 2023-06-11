@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sashabaranov/go-openai"
+	"github.com/scottraio/plum/logger"
 	"github.com/scottraio/plum/memory"
 )
 
@@ -42,16 +43,14 @@ func (ai *OpenAI) Client() LLM {
 func (ai *OpenAI) Run(memory memory.Memory) string {
 	var messages []openai.ChatCompletionMessage
 
-	println("start---------------------------------------------")
 	for _, h := range memory.History {
 
-		println(h.Content)
+		logger.Log("Prompt", h.Content, "white")
 		messages = append(messages, openai.ChatCompletionMessage{
 			Role:    h.Role,
 			Content: h.Content,
 		})
 	}
-	println("end---------------------------------------------")
 
 	resp, err := ai._Client.CreateChatCompletion(
 		ai._Context,
