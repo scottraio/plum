@@ -22,6 +22,7 @@ type AppConfig struct {
 	Models            map[string]*models.Model
 	Agents            map[string]agents.Agent
 	Env               string
+	Truths            []string
 }
 
 type VectorStoreConfig struct {
@@ -46,6 +47,7 @@ func Boot(init Initialize) AppConfig {
 		VectorStore: InitVectorStore(init),
 		Models:      make(map[string]*models.Model),
 		Agents:      make(map[string]agents.Agent),
+		Truths:      init.Truths,
 	}
 
 	return App.boot()

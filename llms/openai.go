@@ -55,7 +55,7 @@ func (ai *OpenAI) Run(memory memory.Memory) string {
 	resp, err := ai._Client.CreateChatCompletion(
 		ai._Context,
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo,
+			Model:    "gpt-3.5-turbo-0613",
 			Messages: messages,
 		},
 	)

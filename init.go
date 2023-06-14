@@ -11,6 +11,7 @@ type Initialize struct {
 	Embedding         func(input string) []float32
 	LLM               string
 	VectorStoreConfig VectorStoreConfig
+	Truths            []string
 }
 
 func InitLLM(init Initialize) llms.LLM {

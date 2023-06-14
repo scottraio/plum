@@ -8,7 +8,7 @@ Must use every tool listed.
 
 // Decision represents a structured decision made by the agent.
 type ParallelDecision struct {
-	DecisionMethod DecisionMethod
+	DecisionStrategy DecisionStrategy
 }
 
 func (d *ParallelDecision) Instructions() string {

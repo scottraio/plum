@@ -6,7 +6,7 @@ To answer the question, you need to think about the question and the tools you h
 
 // Decision represents a structured decision made by the agent.
 type SingleDecision struct {
-	DecisionMethod DecisionMethod
+	DecisionStrategy DecisionStrategy
 }
 
 func (d *SingleDecision) Instructions() string {

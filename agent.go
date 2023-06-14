@@ -6,5 +6,6 @@ import (
 
 func Agent(agent agents.Agent) agents.Agent {
 	agent.LLM = App.LLM
+	agent.Truths = App.Truths
 	return agent
 }

@@ -7,7 +7,7 @@ Then, you will use the selected tools to take the required actions.
 
 // Decision represents a structured decision made by the agent.
 type IterationDecision struct {
-	DecisionMethod DecisionMethod
+	DecisionStrategy DecisionStrategy
 }
 
 func (d *IterationDecision) Instructions() string {
