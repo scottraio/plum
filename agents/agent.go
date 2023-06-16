@@ -133,7 +133,7 @@ func (a *Agent) Return(outputs string) string {
 	}
 
 	answerResp := answer.Answer(a.Memory, a.LLM)
-	a.ScratchPad = append(a.ScratchPad, answerResp.GetNotes())
+	a.ScratchPad = append(a.ScratchPad, "Previous answer example: "+answerResp.FinalAnswer())
 
 	if !answerResp.Validate() {
 		return a.Answer(a.Input)

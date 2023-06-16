@@ -52,12 +52,11 @@ func (a *Answer) Answer(mem memory.Memory, llm llms.LLM) AnswerMethod {
 	mem.Add(a.Method.Instructions(), "system")
 	mem.Add(a.Outputs, "system")
 	mem.Add(a.GetScratchPad(), "system")
-	mem.Add(a.Method.Format(), "system")
 	mem.Add(a.Input, "user")
 	mem.Add("JSON Response:", "system")
 
 	// Run the LLM
-	answer := llm.Run(mem)
+	answer := llm.Answer(mem)
 	output := a.Method.Output(answer)
 
 	a.Method.Log()

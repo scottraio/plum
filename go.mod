@@ -10,11 +10,14 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/pinecone-io/go-pinecone v0.3.0
-	github.com/sashabaranov/go-openai v1.9.0
 	github.com/schollz/progressbar/v3 v3.13.1
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.28.1
 )
+
+replace github.com/sashabaranov/go-openai v1.11.1 => github.com/stillmatic/go-openai v0.0.0-20230615160106-c90b963d6932
+
+require github.com/sashabaranov/go-openai v1.11.1
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect

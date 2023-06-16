@@ -42,6 +42,8 @@ func (a *ScoredAnswer) Instructions() string {
 	3. Score your answer from 0 to 1. The closer to 1, the better.
 
 	4. Follow the rules as they only apply to you, not the user's question.
+
+	5. Consider previous answers did not pass the score threshold. They might be close, so use them as a starting point. 
 	`
 
 	return instructions

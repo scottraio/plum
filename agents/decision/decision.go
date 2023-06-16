@@ -69,12 +69,11 @@ func (d *Decision) Decide(mem memory.Memory, llm llms.LLM) DecisionResp {
 	mem.Add(d.PromptRules(), "system")
 	mem.Add(d.PromptInstructions(), "system")
 	mem.Add(d.GetScratchPad(), "system")
-	mem.Add(d.PromptFormat(), "system")
 	mem.Add(d.Input, "user")
 	mem.Add("JSON Response:", "system")
 
 	// Run the LLM
-	decision := llm.Run(mem)
+	decision := llm.Decide(mem)
 
 	// Parse the JSON response to get the Decision object
 	err := json.Unmarshal([]byte(decision), &d.DecisionResp)
