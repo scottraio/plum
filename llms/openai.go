@@ -133,8 +133,21 @@ func (ai *OpenAI) Answer(memory memory.Memory) string {
 		return "There was an error with the AI Engine. Please try again."
 	}
 
-	logger.Log("Decision", fmt.Sprintf("%v", resp.Choices[0].Message), "white")
-	return resp.Choices[0].Message.FunctionCall.Arguments
+	if len(resp.Choices) > 0 {
+		message := resp.Choices[0].Message
+		if message.FunctionCall != nil {
+			arguments := message.FunctionCall.Arguments
+			// Use the 'arguments' variable for further processing
+			return arguments
+		} else {
+			// Handle the case when 'resp.Choices[0].Message.FunctionCall' is nil
+			return "There was an error with the AI Engine. Couldn't find Message."
+		}
+	} else {
+		// Handle the case when 'resp.Choices' is empty
+		return "There was an error with the AI Engine. Choices are empty."
+	}
+
 }
 
 // {
