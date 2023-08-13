@@ -25,7 +25,7 @@ type Agent struct {
 	Context string
 
 	LLM        llm.LLM
-	Memory     memory.Memory
+	Memory     *memory.Memory
 	ScratchPad []string
 
 	Tools     []Tool // user-defined
@@ -50,7 +50,7 @@ type Agent struct {
 func (a *Agent) Answer(input string) string {
 	a.Input = input
 	// TODO: an agent should carry the conversational memory forward.
-	a.Memory = memory.Memory{}
+	a.Memory = memory.NewMemory()
 
 	// Make a decision (runs LLM)
 	decisionResp := a.Decide()
@@ -61,7 +61,7 @@ func (a *Agent) Answer(input string) string {
 }
 
 // Remember stores the agent's memory.
-func (a *Agent) Remember(memory memory.Memory) *Agent {
+func (a *Agent) Remember(memory *memory.Memory) *Agent {
 	a.Memory = memory
 
 	return a
@@ -99,7 +99,7 @@ func (a *Agent) Decide() decision.DecisionResp {
 		ScratchPad:   a.ScratchPad,
 	}
 
-	decisionResp := decide.Decide(a.Memory, a.LLM)
+	decisionResp := decide.Decide(*a.Memory, a.LLM)
 
 	return decisionResp
 }
@@ -132,7 +132,7 @@ func (a *Agent) Return(outputs string) string {
 		ScratchPad: a.ScratchPad,
 	}
 
-	answerResp := answer.Answer(a.Memory, a.LLM)
+	answerResp := answer.Answer(*a.Memory, a.LLM)
 	a.ScratchPad = append(a.ScratchPad, "Previous answer example: "+answerResp.FinalAnswer())
 
 	if !answerResp.Validate() {
@@ -170,7 +170,7 @@ func (a *Agent) RunAction(act decision.Action) string {
 				CallingAgent:  a.Name,
 				Text:          act.ToolInput,
 				Action:        act,
-				Memory:        a.Memory,
+				Memory:        *a.Memory,
 				CurrentStep:   act.StepDescription,
 				ToolName:      tool.Name,
 				ToolInputType: tool.InputType,

@@ -52,7 +52,7 @@ by typing /model.
 	msgChan := make(chan string)
 
 	// Create a new Memory struct
-	mem := memory.Memory{}
+	mem := memory.NewMemory()
 
 	// Continuously read user input and send it to the chat function
 	reader := bufio.NewReader(os.Stdin)
@@ -71,7 +71,7 @@ by typing /model.
 	}
 }
 
-func startCli(mem memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
+func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, config CliConfig) {
 	var currentAgent string
 	var currentModel string
 	var currentContext string

@@ -7,13 +7,20 @@ import (
 type Memory struct {
 	History []ChatHistory
 }
+
+func NewMemory() *Memory {
+	m := Memory{}
+	m.History = []ChatHistory{}
+	return &m
+}
+
 type ChatHistory struct {
 	Content string `json:"content"`
 	Role    string `json:"role"`
 }
 
-func LoadMemory(history []ChatHistory) Memory {
-	m := Memory{}
+func LoadMemory(history []ChatHistory) *Memory {
+	m := NewMemory()
 	m.History = append(m.History, history...)
 	return m
 }
@@ -69,11 +76,11 @@ func (m *Memory) LogColor(role string) string {
 	}
 }
 
-func (c *ChatHistory) Memory() Memory {
+func (c *ChatHistory) Memory() *Memory {
 	return LoadMemory([]ChatHistory{*c})
 }
 
-func (m Memory) Format() string {
+func (m *Memory) Format() string {
 	var output string
 	output = "\n"
 	for i := range m.History {
