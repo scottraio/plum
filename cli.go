@@ -2,7 +2,6 @@ package plum
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -83,7 +82,7 @@ func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, c
 
 	cursor(currentContext, currentAgent, currentModel)
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
 	for {
 		input := <-msgChan
@@ -102,11 +101,11 @@ func startCli(mem *memory.Memory, reader *bufio.Reader, msgChan <-chan string, c
 
 		} else if strings.HasPrefix(input, CmdTrain) {
 			if currentContext == "model" {
-				App.Models[currentModel].Train(ctx)
+				App.Models[currentModel].TrainModel(map[string]string{})
 			} else {
 				for key, model := range App.Models {
 					logger.Log("Training model", key, "orange")
-					model.Train(ctx)
+					model.TrainModel(map[string]string{})
 				}
 			}
 			// clear screen
